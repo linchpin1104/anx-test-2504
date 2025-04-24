@@ -1,150 +1,303 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 
 interface FormValues {
   name: string;
   phone: string;
-  childAge: string;
-  childGender: string;
-  parentAgeGroup: string;
   code: string;
 }
 
+// 개발환경 여부 확인
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 export default function RegisterPage() {
-  const { register, handleSubmit } = useForm<FormValues>();
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>();
   const router = useRouter();
   const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   const onSendCode = async (data: FormValues) => {
     setSending(true);
-    // Save personal info to Firestore
-    await fetch('/api/member', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: data.name,
-        phone: data.phone,
-        childAge: data.childAge,
-        childGender: data.childGender,
-        parentAgeGroup: data.parentAgeGroup,
-      }),
-    });
-    await fetch('/api/auth/send-sms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: data.phone }),
-    });
-    setCodeSent(true);
-    setSending(false);
+    setSendError('');
+    
+    try {
+      // 개발 모드에서는 API 호출 우회
+      if (isDevelopment) {
+        console.log('[DEV] 인증번호 요청 가상 처리');
+        // 가상 코드 생성
+        const mockCode = '123456';
+        setDevCode(mockCode);
+        setValue('code', mockCode);
+        
+        // 로컬 스토리지에 이름과 전화번호 저장
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('registerName', data.name);
+          localStorage.setItem('registerPhone', data.phone);
+        }
+        
+        // 성공 상태로 설정
+        setCodeSent(true);
+        setSending(false);
+        return;
+      }
+      
+      // 프로덕션 모드에서는 실제 API 호출
+      const smsRes = await fetch('/api/auth/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: data.phone }),
+      });
+      
+      // 응답 파싱 시도
+      let smsData;
+      try {
+        smsData = await smsRes.json();
+      } catch (parseError) {
+        console.error('API 응답 파싱 오류:', parseError);
+        throw new Error('서버 응답 처리 중 오류가 발생했습니다.');
+      }
+      
+      if (!smsData.success) {
+        throw new Error(smsData.error || '인증번호 발송에 실패했습니다.');
+      }
+      
+      // 개발 환경에서 인증번호가 응답에 포함된 경우 자동으로 입력
+      if (smsData.code) {
+        setDevCode(smsData.code);
+        setValue('code', smsData.code);
+      }
+      
+      // 로컬 스토리지에 이름과 전화번호 저장 (다음 단계를 위해)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('registerName', data.name);
+        localStorage.setItem('registerPhone', data.phone);
+      }
+      
+      setCodeSent(true);
+    } catch (error) {
+      console.error('인증번호 요청 오류:', error);
+      setSendError(error instanceof Error ? error.message : '오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const onVerify = async (data: FormValues) => {
     // Dev shortcut: bypass API call for code '0000'
-    if (data.code === '0000') {
-      router.push('/survey');
+    if (data.code === '0000' || isDevelopment) {
+      // 개발 모드에서는 항상 성공으로 처리
+      router.push('/register/basic-info');
       return;
     }
+    
     setVerifying(true);
-    const res = await fetch('/api/auth/verify-sms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: data.phone, code: data.code }),
-    });
-    const json = await res.json();
-    setVerifying(false);
-    if (json.verified) {
-      router.push('/survey');
+    setVerifyError('');
+    
+    try {
+      const res = await fetch('/api/auth/verify-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: data.phone, code: data.code }),
+      });
+      
+      // 응답 파싱 시도
+      let json;
+      try {
+        json = await res.json();
+      } catch (parseError) {
+        console.error('API 응답 파싱 오류:', parseError);
+        throw new Error('서버 응답 처리 중 오류가 발생했습니다.');
+      }
+      
+      if (json.verified) {
+        // 인증 성공 시 기본정보 페이지로 이동
+        router.push('/register/basic-info');
+      } else {
+        setVerifyError('인증번호가 일치하지 않습니다.');
+      }
+    } catch (error) {
+      console.error('인증 확인 오류:', error);
+      setVerifyError(error instanceof Error ? error.message : '오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setVerifying(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">개인정보 입력</h1>
+    <div className="bg-white flex flex-col min-h-screen">
+      {/* 상단 상태바는 생략 (모바일 브라우저에서 자동 표시됨) */}
+      
+      {/* 헤더 */}
+      <div className="w-full h-24 relative overflow-hidden">
+        <div className="py-6 bg-white inline-flex flex-col justify-start items-end overflow-hidden">
+          <div className="w-full px-5 py-4 inline-flex justify-end items-center gap-3" />
+        </div>
+      </div>
+      
+      {/* 타이틀 */}
+      <div className="w-full px-5 py-8 bg-white flex flex-col justify-start items-start gap-5 overflow-hidden">
+        <div className="self-stretch text-center justify-end text-neutral-800 text-xl font-bold leading-7">
+          더나일의 양육불안 검사를<br/>소개합니다
+        </div>
+      </div>
+      
       <form onSubmit={handleSubmit(codeSent ? onVerify : onSendCode)}>
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">이름</label>
-          <input
-            type="text"
-            {...register('name', { required: true })}
-            className="w-full border p-2 rounded"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">휴대폰번호</label>
-          <input
-            type="tel"
-            {...register('phone', { required: true })}
-            className="w-full border p-2 rounded"
-            placeholder="01012345678"
-          />
-        </div>
-        {codeSent && (
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">인증번호 입력</label>
+        {/* 이름 입력 필드 */}
+        <div className="w-full p-5 bg-white flex flex-col justify-start items-start gap-3 overflow-hidden">
+          <div className="self-stretch justify-start">
+            <span className="text-neutral-800 text-lg font-bold leading-relaxed">이름을 알려주세요</span>
+            <span className="text-red-500 text-lg font-bold leading-relaxed">*</span>
+          </div>
+          <div className="w-full flex flex-col justify-start items-start gap-1">
             <input
               type="text"
-              {...register('code', { required: true })}
-              className="w-full border p-2 rounded"
-              placeholder="6자리 코드"
+              {...register('name', { required: true })}
+              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+              placeholder=""
             />
-          </div>
-        )}
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">아이 연령</label>
-          <input
-            type="number"
-            {...register('childAge', { required: true })}
-            className="w-full border p-2 rounded"
-            min="0"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">아이 성별</label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-1">
-              <input type="radio" {...register('childGender', { required: true })} value="male" />
-              <span>남</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input type="radio" {...register('childGender', { required: true })} value="female" />
-              <span>여</span>
-            </label>
+            {errors.name && (
+              <p className="text-red-600 text-sm mt-1">이름을 입력해주세요</p>
+            )}
           </div>
         </div>
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">부모 연령대</label>
-          <select {...register('parentAgeGroup', { required: true })} className="w-full border p-2 rounded">
-            <option value="">선택하세요</option>
-            <option value="20대">20대</option>
-            <option value="30대">30대</option>
-            <option value="40대">40대</option>
-            <option value="50대 이상">50대 이상</option>
-          </select>
+        
+        {/* 휴대폰 번호 입력 필드 */}
+        <div className="w-full p-5 bg-white flex flex-col justify-start items-start gap-3 overflow-hidden">
+          <div className="self-stretch justify-start">
+            <span className="text-neutral-800 text-lg font-bold leading-relaxed">휴대폰 번호를 알려주세요</span>
+            <span className="text-red-500 text-lg font-bold leading-relaxed">*</span>
+          </div>
+          <div className="w-full flex flex-col justify-start items-start gap-1">
+            <input
+              type="tel"
+              {...register('phone', { required: true })}
+              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+              placeholder="01012345678"
+            />
+            {errors.phone && (
+              <p className="text-red-600 text-sm mt-1">휴대폰 번호를 입력해주세요</p>
+            )}
+          </div>
         </div>
-        {!codeSent && (
-          <button
-            type="submit"
-            disabled={sending}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-2 rounded"
-          >
-            {sending ? '요청중...' : '인증번호 요청'}
-          </button>
-        )}
+        
+        {/* 인증번호 입력 필드 (조건부 렌더링) */}
         {codeSent && (
-          <button
-            type="submit"
-            disabled={verifying}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold p-2 rounded"
-          >
-            {verifying ? '확인중...' : '인증번호 확인'}
-          </button>
+          <div className="w-full p-5 bg-white flex flex-col justify-start items-start gap-3 overflow-hidden">
+            <div className="self-stretch justify-start">
+              <span className="text-neutral-800 text-lg font-bold leading-relaxed">인증번호 입력</span>
+              <span className="text-red-500 text-lg font-bold leading-relaxed">*</span>
+            </div>
+            <div className="w-full flex flex-col justify-start items-start gap-1">
+              <input
+                type="text"
+                {...register('code', { required: true })}
+                className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+                placeholder="6자리 코드"
+              />
+              {devCode && (
+                <p className="text-green-600 text-sm mt-1">개발 모드: 인증번호 {devCode}이 자동입력되었습니다</p>
+              )}
+              {errors.code && (
+                <p className="text-red-600 text-sm mt-1">인증번호를 입력해주세요</p>
+              )}
+            </div>
+          </div>
         )}
+        
+        {/* 버튼 */}
+        <div className="w-full h-28 px-5 flex flex-col justify-start items-center gap-5 mt-4">
+          {!codeSent ? (
+            <>
+              <button
+                type="submit"
+                disabled={sending}
+                className="w-full px-4 py-4 bg-sky-500 rounded-2xl inline-flex justify-center items-center gap-2 disabled:opacity-50 text-white text-lg font-semibold"
+              >
+                {sending ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    요청중...
+                  </span>
+                ) : '인증번호 요청'}
+              </button>
+              {sendError && (
+                <div className="w-full p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  <p className="font-medium">요청 오류</p>
+                  <p>{sendError}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <button
+                type="submit"
+                disabled={verifying}
+                className="w-full px-4 py-4 bg-green-600 rounded-2xl inline-flex justify-center items-center gap-2 disabled:opacity-50 text-white text-lg font-semibold"
+              >
+                {verifying ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    확인중...
+                  </span>
+                ) : '인증번호 확인'}
+              </button>
+              {verifyError && (
+                <div className="w-full p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  <p className="font-medium">인증 오류</p>
+                  <p>{verifyError}</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </form>
+      
+      {/* 푸터 */}
+      <div className="w-full px-5 py-8 bg-neutral-100 flex flex-col justify-start items-start gap-4 mt-auto">
+        <div className="text-zinc-600 text-xs font-semibold">사단법인 STAMP</div>
+        <div className="flex flex-col justify-start items-start gap-1">
+          <div className="text-zinc-600 text-xs">대표</div>
+          <div className="text-zinc-600 text-xs">개인정보보호책임자</div>
+          <div className="text-zinc-600 text-xs">사업자등록번호</div>
+          <div className="text-zinc-600 text-xs">통신판매업신고</div>
+          <div className="text-zinc-600 text-xs">고객 센터</div>
+          <div className="text-zinc-600 text-xs">서울특별시</div>
+          <div className="inline-flex justify-start items-center gap-3 mt-2">
+            <div className="text-zinc-600 text-xs font-semibold">서비스 소개</div>
+            <div className="w-px h-3 bg-zinc-600" />
+            <div className="text-zinc-600 text-xs font-semibold">서비스이용약관</div>
+            <div className="w-px h-3 bg-zinc-600" />
+            <div className="text-zinc-600 text-xs font-semibold">개인정보처리방침</div>
+          </div>
+        </div>
+        <div className="inline-flex justify-start items-center gap-2 mt-2">
+          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
+            <div className="w-4 h-3.5 bg-neutral-400" />
+          </div>
+          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
+            <div className="w-4 h-2.5 bg-neutral-400" />
+          </div>
+          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
+            <div className="w-3.5 h-3.5 bg-neutral-400" />
+          </div>
+          <button className="px-3 py-2.5 rounded-lg outline outline-1 outline-neutral-200 flex justify-center items-center gap-1 text-zinc-600 text-sm font-semibold">
+            1:1 문의하기
+          </button>
+        </div>
+      </div>
     </div>
   );
 } 
