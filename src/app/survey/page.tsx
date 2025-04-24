@@ -34,15 +34,17 @@ export default function SurveyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [questionsError, setQuestionsError] = useState('');
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormValues>();
   const router = useRouter();
 
   // Define scale labels for general and BAI questions
   const generalScale = [
-    { value: 1, label: '전혀 그렇지 않다' },
-    { value: 2, label: '대체로 그렇지 않다' },
-    { value: 3, label: '보통이다' },
-    { value: 4, label: '대체로 그렇다' },
+    { value: 1, label: '그렇지 않다' },
+    { value: 2, label: '별로 그렇지 않다' },
+    { value: 3, label: '약간 그렇다' },
+    { value: 4, label: '그렇다' },
     { value: 5, label: '매우 그렇다' },
   ];
   const baiScale = [
@@ -53,10 +55,23 @@ export default function SurveyPage() {
   ];
 
   useEffect(() => {
+    setQuestionsLoading(true);
+    setQuestionsError('');
     fetch('/api/questions')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('질문을 불러오는데 실패했습니다.');
+        }
+        return res.json();
+      })
       .then((data: Question[]) => {
         setQuestions(data);
+        setQuestionsLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setQuestionsError(err instanceof Error ? err.message : '질문을 불러오는데 오류가 발생했습니다.');
+        setQuestionsLoading(false);
       });
   }, []);
 
@@ -69,23 +84,21 @@ export default function SurveyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: data }),
       });
+      
       if (!res.ok) {
-        // Handle API error without throwing to avoid overlay
-        const errorBody = await res.json().catch(() => ({}));
-        const msg = errorBody?.message || '제출 중 오류가 발생했습니다. 다시 시도해주세요.';
-        setError(msg);
-        return;
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData?.message || '제출 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
+      
       const json: ResultData = await res.json();
       // Save result and navigate to result page
       if (typeof window !== 'undefined') {
         localStorage.setItem('surveyResult', JSON.stringify(json));
       }
       router.push('/survey/result');
-      return;
-    } catch (e) {
-      console.error(e);
-      setError('제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : '제출 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
@@ -98,8 +111,26 @@ export default function SurveyPage() {
     if (qIndex >= 0) alert(`${qIndex + 1}번 문항에 응답하지 않으셨습니다`);
   };
 
+  if (questionsLoading) {
+    return <div className="p-4 text-center">질문을 불러오는 중입니다...</div>;
+  }
+
+  if (questionsError) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-600 mb-4">{questionsError}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
   if (questions.length === 0) {
-    return <div className="p-4 text-center">Loading questions...</div>;
+    return <div className="p-4 text-center">질문이 없습니다. 관리자에게 문의하세요.</div>;
   }
 
   // If result exists, show result UI
@@ -141,63 +172,100 @@ export default function SurveyPage() {
     );
   }
 
+  const formValues = watch();
+  const hasAnswers = Object.keys(formValues).length > 0;
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">양육불안 검사</h1>
-      <form onSubmit={handleSubmit(onSubmit, onError)}>
-        {questions.map((q, idx) => (
-          <div key={q.id} className="mb-6">
-            {/* Question number */}
-            <p className="font-medium mb-2">{idx + 1}. {q.text}</p>
-            {/* Validation error message */}
-            {errors[q.id] && (
-              <p className="text-red-600 text-sm mb-2">이 질문에 답변해주세요.</p>
-            )}
-            {/* Endpoint labels with line break */}
-            {(() => {
-              const scale = q.category === 'BAI 불안척도' ? baiScale : generalScale;
-              return (
-                <div className="mb-2 flex justify-between text-sm text-gray-600">
-                  <span className="text-center">
-                    {scale[0].label.split(' ')[0]}<br />{scale[0].label.split(' ').slice(1).join(' ')}
-                  </span>
-                  <span className="text-center">
-                    {scale[scale.length - 1].label.split(' ')[0]}<br />{scale[scale.length - 1].label.split(' ').slice(1).join(' ')}
-                  </span>
+    <div className="w-full max-w-md mx-auto bg-white flex flex-col min-h-screen">
+      {/* Content container */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Title container */}
+        <div className="w-full px-5 pt-8 pb-5 flex flex-col justify-start items-start gap-3">
+          <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-loose">양육불안도 검사 (총 47문항)</div>
+          <div className="self-stretch justify-start text-zinc-600 text-sm md:text-base font-normal font-['Pretendard_Variable'] leading-snug">복직 준비도 검사는 부모가 일로 복귀하게 될 때 <br/>얼마나 준비가 되었는지 확인할 수 있는 검사에요</div>
+        </div>
+
+        {/* Alert box */}
+        <div className="w-full px-5 pb-3 flex flex-col justify-start items-start gap-6">
+          <div className="self-stretch px-4 py-3 bg-white rounded-lg outline outline-1 outline-offset-[-1px] outline-neutral-200 flex flex-col justify-start items-start gap-2">
+            <div className="inline-flex justify-start items-center gap-1">
+              <div className="size-4 relative">
+                <div className="size-3.5 left-[1.33px] top-[1.33px] absolute bg-amber-500" />
+              </div>
+              <div className="justify-center text-amber-500 text-xs font-semibold font-['Pretendard_Variable'] leading-3">안내</div>
+            </div>
+            <div className="self-stretch justify-center text-zinc-600 text-xs font-normal font-['Pretendard_Variable'] leading-tight">모든 질문에 응답해주세요. 제출 후에는 수정이 불가능합니다.</div>
+          </div>
+        </div>
+
+        {/* Survey form */}
+        <form onSubmit={handleSubmit(onSubmit, onError)} className="w-full flex-1 flex flex-col">
+          <div className="w-full px-5 pt-5 pb-4 flex-1 flex flex-col justify-start items-start gap-8 overflow-y-auto">
+            {questions.map((q, idx) => (
+              <div key={q.id} className="self-stretch flex flex-col justify-start items-start gap-3 w-full">
+                <div className="self-stretch inline-flex justify-start items-start gap-1">
+                  <div className="justify-start text-black text-base font-semibold font-['Pretendard_Variable'] leading-normal">{idx + 1}.</div>
+                  <div className="flex-1 justify-start text-black text-base font-semibold font-['Pretendard_Variable'] leading-normal">{q.text}</div>
                 </div>
-              );
-            })()}
-            {/* Scale selector with numeric labels */}
-            {(() => {
-              const scale = q.category === 'BAI 불안척도' ? baiScale : generalScale;
-              return (
-                <div className="flex justify-between items-center">
-                  {scale.map(({ value }) => (
-                    <label key={value} className="flex flex-col items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        value={value}
-                        {...register(q.id, { required: true })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-6 h-6 border-2 border-blue-600 rounded-full peer-checked:bg-blue-600"></div>
-                      <span className="mt-1 text-sm text-gray-700">{value}</span>
-                    </label>
+                <div className="self-stretch grid grid-cols-5 gap-2">
+                  {(q.category === 'BAI 불안척도' ? baiScale : generalScale).map(({ value, label }) => (
+                    <div key={value} className="flex flex-col justify-start items-center gap-1">
+                      <label className="size-10 md:size-12 relative rounded-full outline outline-1 outline-offset-[-1px] outline-neutral-200 flex flex-col justify-center items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          value={value}
+                          {...register(q.id, { required: true })}
+                          className="sr-only peer"
+                        />
+                        <div className="peer-checked:bg-sky-500 absolute inset-0 rounded-full z-0"></div>
+                        <div className="z-10 relative w-full text-center justify-center peer-checked:text-white text-zinc-600 text-sm md:text-base font-medium font-['Pretendard_Variable'] leading-none">{value}</div>
+                      </label>
+                      <div className="text-center justify-start text-neutral-400 text-xs font-medium font-['Pretendard_Variable'] leading-tight whitespace-pre-line">
+                        {label.includes(' ') 
+                          ? `${label.split(' ')[0]}\n${label.split(' ').slice(1).join(' ')}`
+                          : label}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              );
-            })()}
+                {errors[q.id] && (
+                  <p className="text-red-600 text-sm mb-2 self-start">이 질문에 답변해주세요.</p>
+                )}
+              </div>
+            ))}
           </div>
-        ))}
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded disabled:opacity-50"
-        >
-          {loading ? '제출중...' : '제출'}
-        </button>
-        {error && <p className="mt-2 text-red-600">{error}</p>}
-      </form>
+
+          {/* Submit button - sticky footer */}
+          <div className="w-full sticky bottom-0 bg-white border-t border-zinc-100 mt-auto">
+            <div className="px-5 py-4 w-full">
+              <button
+                type="submit"
+                disabled={loading || !hasAnswers}
+                className={`w-full px-4 py-3 md:py-4 rounded-2xl flex justify-center items-center gap-2 text-center text-white text-base md:text-lg font-semibold font-['Pretendard_Variable'] leading-none ${
+                  loading || !hasAnswers ? 'bg-neutral-200' : 'bg-sky-500 shadow-md'
+                }`}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    제출중...
+                  </span>
+                ) : '제출하기'}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {error && (
+          <div className="w-full px-5 mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <p className="font-medium">제출 오류</p>
+            <p>{error}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 
