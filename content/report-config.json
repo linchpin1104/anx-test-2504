@@ -1,0 +1,75 @@
+{
+  "scales": [
+    {
+      "categories": [
+        "부모역할 효능감으로 인한 불안",
+        "자녀와의 애착에 대한 불안",
+        "자녀에 대한 염려",
+        "사회적 지지에 대한 염려",
+        "완벽주의로 인한 불안"
+      ],
+      "min": 1,
+      "max": 5,
+      "labels": {
+        "1": "전혀그렇지않다",
+        "2": "대체로그렇지않다",
+        "3": "보통이다",
+        "4": "대체로그렇다",
+        "5": "매우그렇다"
+      }
+    },
+    {
+      "category": "BAI 불안척도",
+      "min": 0,
+      "max": 3,
+      "startLabel": "전혀 그렇지 않다",
+      "endLabel": "심각하게 그렇다"
+    }
+  ],
+  "thresholds": {
+    "globalAverage": [
+      { "label": "매우높음", "min": 3.67, "description": "결과내용" },
+      { "label": "높음", "min": 3.08, "max": 3.67, "description": "결과내용" },
+      { "label": "평균", "min": 1.9, "max": 3.08, "description": "결과내용" },
+      { "label": "낮음", "max": 1.9, "description": "결과내용" }
+    ],
+    "categories": {
+      "부모역할 효능감으로 인한 불안": [
+        { "label": "매우높음", "min": 4.43, "description": "결과내용" },
+        { "label": "높음", "min": 3.61, "max": 4.43, "description": "결과내용" },
+        { "label": "평균", "min": 1.97, "max": 3.61, "description": "결과내용" },
+        { "label": "낮음", "max": 1.97, "description": "결과내용" }
+      ],
+      "자녀와의 애착에 대한 불안": [
+        { "label": "매우높음", "min": 3.45, "description": "결과내용" },
+        { "label": "높음", "min": 2.76, "max": 3.45, "description": "결과내용" },
+        { "label": "평균", "min": 1.38, "max": 2.76, "description": "결과내용" },
+        { "label": "낮음", "max": 1.38, "description": "결과내용" }
+      ],
+      "자녀에 대한 염려": [
+        { "label": "매우높음", "min": 4.2, "description": "결과내용" },
+        { "label": "높음", "min": 3.47, "max": 4.2, "description": "결과내용" },
+        { "label": "평균", "min": 2.01, "max": 3.47, "description": "결과내용" },
+        { "label": "낮음", "max": 2.01, "description": "결과내용" }
+      ],
+      "사회적 지지에 대한 염려": [
+        { "label": "매우높음", "min": 3.43, "description": "결과내용" },
+        { "label": "높음", "min": 2.78, "max": 3.43, "description": "결과내용" },
+        { "label": "평균", "min": 1.48, "max": 2.78, "description": "결과내용" },
+        { "label": "낮음", "max": 1.48, "description": "결과내용" }
+      ],
+      "완벽주의로 인한 불안": [
+        { "label": "매우높음", "min": 3.87, "description": "결과내용" },
+        { "label": "높음", "min": 3.22, "max": 3.87, "description": "결과내용" },
+        { "label": "평균", "min": 1.92, "max": 3.22, "description": "결과내용" },
+        { "label": "낮음", "max": 1.92, "description": "결과내용" }
+      ],
+      "BAI 불안척도": [
+        { "label": "정상", "min": 0, "max": 7, "description": "결과내용" },
+        { "label": "가벼운불안", "min": 8, "max": 15, "description": "결과내용" },
+        { "label": "중증불안", "min": 16, "max": 25, "description": "결과내용" },
+        { "label": "심한불안", "min": 26, "max": 63, "description": "결과내용" }
+      ]
+    }
+  }
+} 
