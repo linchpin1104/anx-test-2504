@@ -33,6 +33,47 @@ type CategoryColors = {
   [key: string]: string;
 };
 
+// Export Radar chart component - Updated for deployment
+const RadarChartComponent = (props: any) => {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <RadarChart 
+        data={props.data}
+        cx="50%" 
+        cy="50%" 
+        outerRadius="80%"
+      >
+        <PolarGrid gridType="polygon" />
+        <PolarAngleAxis 
+          dataKey="category" 
+          tick={{ fill: '#71717a', fontSize: 13 }}
+          tickLine={false}
+        />
+        <PolarRadiusAxis 
+          domain={[0, 5]} 
+          tickCount={6} 
+          axisLine={true} 
+          tick={{ fontSize: 13 }}
+        />
+        {Object.entries(props.categoryResults)
+          .filter(([cat]) => cat !== 'BAI 불안척도')
+          .map(([category]) => (
+            <Radar 
+              key={category}
+              name={category} 
+              dataKey="value" 
+              stroke={props.getTailwindColor(props.categoryColors[category] || 'bg-indigo-500')}
+              fill={props.getTailwindColor(props.categoryColors[category] || 'bg-indigo-500')}
+              fillOpacity={0.5}
+              isAnimationActive={true}
+              dot
+            />
+          ))}
+      </RadarChart>
+    </ResponsiveContainer>
+  );
+};
+
 export default function SurveyResultPage() {
   const router = useRouter();
   const [result, setResult] = useState<ResultData | null>(null);
