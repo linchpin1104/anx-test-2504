@@ -91,9 +91,11 @@ export default function SurveyPage() {
     }
   };
 
-  // Alert for first unanswered question
+  // Alert for first unanswered question when submitting
   const onError = (errorsFields: FieldErrors<FormValues>) => {
-    // Implementation of onError function
+    const firstKey = Object.keys(errorsFields)[0];
+    const qIndex = questions.findIndex((q) => q.id === firstKey);
+    if (qIndex >= 0) alert(`${qIndex + 1}번 문항에 응답하지 않으셨습니다`);
   };
 
   if (questions.length === 0) {

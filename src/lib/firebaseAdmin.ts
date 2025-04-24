@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
 import { getApps } from 'firebase-admin/app';
+import { db, auth } from '@/lib/firebaseClient';
 
 let firestoreInstance: admin.firestore.Firestore | null = null;
 try {
@@ -24,14 +25,19 @@ try {
 }
 
 // If initialized, use actual Firestore, otherwise stub with no-op methods
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 const dummyFirestore = {
-  collection: (_: string) => ({
-    doc: (_id: string) => ({
-      set: async (_data: any) => {},
-      update: async (_data: any) => {},
+  collection: (collectionName: string) => ({
+    doc: (docId: string) => ({
+      set: async (data: any): Promise<void> => {},
+      update: async (data: any): Promise<void> => {},
       get: async () => ({ exists: false, data: () => ({}) }),
-      delete: async () => {},
+      delete: async (): Promise<void> => {},
     }),
   }),
 };
-export const firestore: any = firestoreInstance || dummyFirestore; 
+/* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+
+// Export Firestore: real instance or dummy stub
+export const firestore: admin.firestore.Firestore =
+  firestoreInstance || (dummyFirestore as unknown as admin.firestore.Firestore); 

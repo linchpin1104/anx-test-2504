@@ -14,11 +14,11 @@ interface FormValues {
 }
 
 export default function RegisterPage() {
+  const { register, handleSubmit } = useForm<FormValues>();
   const router = useRouter();
   const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const { register, handleSubmit, watch } = useForm<FormValues>();
 
   const onSendCode = async (data: FormValues) => {
     setSending(true);

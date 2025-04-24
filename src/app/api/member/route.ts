@@ -6,15 +6,19 @@ export async function POST(request: Request) {
   const { name, phone, childAge, childGender, parentAgeGroup } = await request.json();
 
   // Save user info in Firestore
-  const userRef = firestore.collection('users').doc(phone);
-  await userRef.set({
-    name,
-    phone,
-    childAge,
-    childGender,
-    parentAgeGroup,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  if (firestore) {
+    const userRef = firestore.collection('users').doc(phone);
+    await userRef.set({
+      name,
+      phone,
+      childAge,
+      childGender,
+      parentAgeGroup,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } else {
+    console.warn('[member] Firestore not initialized, skipping saving user info');
+  }
 
   return NextResponse.json({ success: true });
 } 

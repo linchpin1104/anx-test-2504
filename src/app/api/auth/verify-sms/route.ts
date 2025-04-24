@@ -6,13 +6,16 @@ import { randomBytes } from 'crypto';
 export async function POST(request: Request) {
   const { phone, code } = await request.json();
 
-  // Dev shortcut: accept '0000' code without SMS verification
   if (code === '0000') {
     const sessionId = randomBytes(16).toString('hex');
-    await firestore.collection('sessions').doc(sessionId).set({
-      phone,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    if (firestore) {
+      await firestore.collection('sessions').doc(sessionId).set({
+        phone,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } else {
+      console.warn('[verify-sms] Firestore not initialized, skipping session creation for dev code');
+    }
     const response = NextResponse.json({ verified: true });
     response.cookies.set('session', sessionId, {
       httpOnly: true,
@@ -22,7 +25,10 @@ export async function POST(request: Request) {
     return response;
   }
 
-  // Retrieve stored code from Firestore
+  if (!firestore) {
+    console.warn('[verify-sms] Firestore not initialized, skipping code verification');
+    return NextResponse.json({ verified: false });
+  }
   const docRef = firestore.collection('smsCodes').doc(phone);
   const docSnap = await docRef.get();
   if (!docSnap.exists) {
@@ -39,10 +45,14 @@ export async function POST(request: Request) {
 
   // Create session ID and store in Firestore
   const sessionId = randomBytes(16).toString('hex');
-  await firestore.collection('sessions').doc(sessionId).set({
-    phone,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  if (firestore) {
+    await firestore.collection('sessions').doc(sessionId).set({
+      phone,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } else {
+    console.warn('[verify-sms] Firestore not initialized, skipping session creation');
+  }
 
   // Set session cookie
   const response = NextResponse.json({ verified: true });
