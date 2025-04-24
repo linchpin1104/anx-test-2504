@@ -182,7 +182,7 @@ export default function SurveyPage() {
         {/* Title container */}
         <div className="w-full px-5 pt-8 pb-5 flex flex-col justify-start items-start gap-3">
           <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-loose">양육불안도 검사 (총 47문항)</div>
-          <div className="self-stretch justify-start text-zinc-600 text-sm md:text-base font-normal font-['Pretendard_Variable'] leading-snug">복직 준비도 검사는 부모가 일로 복귀하게 될 때 <br/>얼마나 준비가 되었는지 확인할 수 있는 검사에요</div>
+          <div className="self-stretch justify-start text-zinc-600 text-sm md:text-base font-normal font-['Pretendard_Variable'] leading-snug">양육불안도 검사는 부모의 양육과정에서 <br/>경험하는 불안 수준을 측정하는 검사입니다</div>
         </div>
 
         {/* Alert box */}
