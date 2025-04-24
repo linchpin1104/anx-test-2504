@@ -1,7 +1,7 @@
 import admin from 'firebase-admin';
 import { getApps } from 'firebase-admin/app';
-import { db, auth } from '@/lib/firebaseClient';
 
+// Removed unused db and auth variables
 let firestoreInstance: admin.firestore.Firestore | null = null;
 try {
   if (!getApps().length) {
