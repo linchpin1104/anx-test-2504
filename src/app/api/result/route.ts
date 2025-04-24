@@ -4,12 +4,29 @@ import { join } from 'path';
 import { firestore } from '@/lib/firebaseAdmin';
 import * as admin from 'firebase-admin';
 
+// Interface for threshold entries
+interface ThresholdEntry {
+  min?: number;
+  max?: number;
+  label?: string;
+  description?: string;
+}
+
+// Interface for report-config.json structure
+interface ReportConfig {
+  thresholds: {
+    categories: Record<string, ThresholdEntry[]>;
+    globalAverage: ThresholdEntry[];
+  };
+  scales: Array<{ categories: string[] }>;
+}
+
 export async function POST(request: Request) {
   // Parse request body
   const { answers } = await request.json();
 
   // Attempt to save raw answers to Firestore (skip if misconfigured)
-  let rawDocRef: any = null;
+  let rawDocRef!: admin.firestore.DocumentReference<admin.firestore.DocumentData>;
   try {
     rawDocRef = firestore.collection('responses').doc();
     await rawDocRef.set({ answers, createdAt: admin.firestore.FieldValue.serverTimestamp() });
@@ -25,7 +42,7 @@ export async function POST(request: Request) {
   // Load report-config
   const rcPath = join(process.cwd(), 'content', 'report-config.json');
   const rcJson = await fs.readFile(rcPath, 'utf8');
-  const reportConfig: any = JSON.parse(rcJson);
+  const reportConfig = JSON.parse(rcJson) as ReportConfig;
   const thresholds = reportConfig.thresholds;
 
   // Group answers by category
@@ -39,7 +56,7 @@ export async function POST(request: Request) {
   });
 
   // Helper to find threshold entry
-  const findThreshold = (entries: any[], value: number) => {
+  const findThreshold = (entries: ThresholdEntry[], value: number): ThresholdEntry | undefined => {
     return entries.find((e) => {
       if (e.min !== undefined && e.max !== undefined) return value >= e.min && value < e.max;
       if (e.min !== undefined) return value >= e.min;
@@ -63,7 +80,7 @@ export async function POST(request: Request) {
   }
 
   // Compute global average for the five parenting categories
-  const globalCats: string[] = reportConfig.scales.find((s: any) => s.categories)?.categories;
+  const globalCats: string[] = reportConfig.scales.find((s) => s.categories)?.categories ?? [];
   const means = globalCats.map((cat) => categoryResults[cat]?.mean || 0);
   const globalMean = means.reduce((a, b) => a + b, 0) / means.length;
   const globalEntry = findThreshold(thresholds.globalAverage, globalMean);
