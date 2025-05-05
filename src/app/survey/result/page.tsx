@@ -64,15 +64,16 @@ export default function SurveyResultPage() {
     return <div className="p-4 text-center">결과를 불러오는 중...</div>;
   }
 
-  const { globalResult, categoryResults, baiResult } = resultData;
+  const { globalResult, categoryResults, baiResult, userInfo } = resultData;
+  const userName = userInfo?.name || "회원님";
 
   // Define category colors
   const categoryColors: CategoryColors = {
-    '부모역할 효능감으로 불안': 'bg-rose-400',
-    '완벽주의로 인한 불안': 'bg-sky-700',
-    '사회적지지에 대한 불안': 'bg-green-600',
-    '자녀에 대한 염려': 'bg-cyan-600',
-    '자녀와의 애착에 대한 염려': 'bg-red-500',
+    '부모역할 효능감으로 불안': 'bg-sky-500',
+    '완벽주의로 인한 불안': 'bg-sky-500',
+    '사회적지지에 대한 불안': 'bg-sky-500',
+    '자녀에 대한 염려': 'bg-sky-500',
+    '자녀와의 애착에 대한 염려': 'bg-sky-500',
   };
 
   // Convert Tailwind classes to hex colors for the chart
@@ -83,13 +84,14 @@ export default function SurveyResultPage() {
       case 'bg-green-600': return '#16a34a';
       case 'bg-cyan-600': return '#0891b2';
       case 'bg-red-500': return '#ef4444';
+      case 'bg-sky-500': return '#0ea5e9';
       default: return '#6366F1';
     }
   };
 
   // Get anxiety level color and background
   const getStatusColor = (label: string) => {
-    if (label.includes('좋음') || label.includes('정상')) {
+    if (label.includes('좋음') || label.includes('정상') || label.includes('낮음')) {
       return {
         bg: 'bg-emerald-200',
         text: 'text-green-600',
@@ -101,7 +103,13 @@ export default function SurveyResultPage() {
         text: 'text-yellow-600',
         badge: 'bg-yellow-100 text-yellow-600'
       };
-    } else if (label.includes('중간')) {
+    } else if (label.includes('중간') || label.includes('평균')) {
+      return {
+        bg: 'bg-sky-200',
+        text: 'text-sky-600',
+        badge: 'bg-sky-100 text-sky-600'
+      };
+    } else if (label.includes('심한') || label.includes('높은')) {
       return {
         bg: 'bg-orange-200',
         text: 'text-orange-600',
@@ -111,7 +119,7 @@ export default function SurveyResultPage() {
       return {
         bg: 'bg-rose-200',
         text: 'text-red-600',
-        badge: 'bg-rose-100 text-red-500'
+        badge: 'bg-rose-100 text-red-600'
       };
     }
   };
@@ -123,7 +131,7 @@ export default function SurveyResultPage() {
     <div className="w-full max-w-md mx-auto bg-white flex flex-col min-h-screen">
       {/* Title container */}
       <div className="w-full px-5 pt-8 pb-5 flex flex-col justify-start items-start gap-3">
-        <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-loose">나의 양육불안지수 보고서</div>
+        <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-relaxed">나의 양육불안지수 보고서</div>
       </div>
 
       {/* Alert box */}
@@ -133,9 +141,9 @@ export default function SurveyResultPage() {
             <div className="size-4 relative">
               <div className="size-3.5 left-[1.33px] top-[1.33px] absolute bg-amber-500" />
             </div>
-            <div className="justify-center text-amber-500 text-sm font-semibold font-['Pretendard_Variable'] leading-3" style={{ fontSize: '13px' }}>안내</div>
+            <div className="justify-center text-amber-500 text-sm font-semibold font-['Pretendard_Variable'] leading-6" style={{ fontSize: '13px' }}>안내</div>
           </div>
-          <div className="self-stretch justify-center text-zinc-600 text-sm font-normal font-['Pretendard_Variable'] leading-tight" style={{ fontSize: '13px' }}>이 결과는 검사 당시의 상태를 기반으로 합니다. 점수는 참고용이며 정확한 판단은 전문가와 상담하세요.</div>
+          <div className="self-stretch justify-center text-zinc-600 text-sm font-normal font-['Pretendard_Variable'] leading-6" style={{ fontSize: '13px' }}>이 결과는 검사 당시의 상태를 기반으로 합니다. 점수는 참고용이며 정확한 판단은 전문가와 상담하세요.</div>
         </div>
       </div>
 
@@ -144,18 +152,7 @@ export default function SurveyResultPage() {
       {/* Overall result section */}
       <div className="size-full px-5 py-10 bg-white flex flex-col justify-start items-start gap-5">
         <div className="self-stretch h-9 inline-flex justify-start items-start">
-          <div className="w-80 justify-start text-neutral-800 text-xl font-bold font-['Pretendard_Variable'] leading-loose">나의 양육불안 총평</div>
-        </div>
-        
-        <div className="w-72 flex flex-col justify-start items-start gap-2.5">
-          <div className="px-2 py-1 bg-rose-100 rounded-[100px] inline-flex justify-center items-center gap-1">
-            <div className="size-3.5 relative overflow-hidden">
-              <div className="size-2.5 left-[1.75px] top-[1.71px] absolute bg-red-500" />
-            </div>
-            <div className="text-center justify-start text-red-500 text-base font-bold font-['Pretendard_Variable'] leading-none">
-              총점 : {globalResult.mean.toFixed(1)}점 / {globalResult.label}
-            </div>
-          </div>
+          <div className="w-full justify-start text-neutral-800 text-xl font-bold font-['Pretendard_Variable'] leading-relaxed">나의 양육불안 총평</div>
         </div>
         
         <div className="w-full flex flex-col justify-center items-center gap-2.5">
@@ -164,19 +161,16 @@ export default function SurveyResultPage() {
               <div className="w-full relative overflow-hidden">
                 <div className="w-full inline-flex flex-col justify-center items-start">
                   <div className="w-full flex flex-col justify-center items-start gap-4">
-                    <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-tight">
-                      회원님의 양육불안지수는 {globalResult.label} 수준이에요
+                    <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6">
+                      양육불안지수 : <span className={getStatusColor(globalResult.label).text}>{globalResult.label}</span> ({globalResult.mean.toFixed(1)}점)
                     </div>
                   </div>
-                  <div className="w-full flex flex-col justify-center items-start gap-4">
-                    <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-tight">
+                  <div className="w-full flex flex-col justify-center items-start gap-4 mt-4">
+                    <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-6">
                       {globalResult.description}
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="w-10 h-9 relative overflow-hidden flex-shrink-0 ml-2">
-                <div className={`size-7 left-[4.88px] top-[2.92px] absolute ${globalStatusColors.bg} rounded-full`} />
               </div>
             </div>
           </div>
@@ -185,7 +179,7 @@ export default function SurveyResultPage() {
 
       {/* Radar chart section */}
       <div className="w-full px-5 py-8 bg-neutral-50 rounded-2xl flex flex-col justify-start items-start gap-5 overflow-hidden">
-        <div className="justify-start text-neutral-800 text-base font-bold font-['Pretendard_Variable'] leading-normal">자세히 살펴보기</div>
+        <div className="w-full text-center justify-center text-neutral-800 text-base font-bold font-['Pretendard_Variable'] leading-relaxed">자세히 살펴보기</div>
         
         <div className="w-full py-4 rounded-3xl flex flex-col justify-center items-center">
           {/* Radar chart wrapper */}
@@ -221,9 +215,9 @@ export default function SurveyResultPage() {
                       key={category}
                       name={category} 
                       dataKey="value" 
-                      stroke={getTailwindColor(categoryColors[category] || 'bg-indigo-500')}
-                      fill={getTailwindColor(categoryColors[category] || 'bg-indigo-500')}
-                      fillOpacity={0.5}
+                      stroke={getTailwindColor('bg-sky-500')}
+                      fill={getTailwindColor('bg-sky-500')}
+                      fillOpacity={0.1}
                       isAnimationActive={true}
                       dot
                     />
@@ -240,11 +234,8 @@ export default function SurveyResultPage() {
         .map(([category, { mean, label, description }]) => (
           <div key={category} className="size-full px-5 py-10 bg-white flex flex-col justify-start items-start gap-5">
             <div className="w-full flex flex-col justify-start items-start gap-2.5">
-              <div className="self-stretch px-2 py-1 bg-rose-100 rounded-[100px] inline-flex justify-center items-center gap-1">
-                <div className="size-3.5 relative overflow-hidden">
-                  <div className="size-2.5 left-[1.75px] top-[1.71px] absolute bg-red-500" />
-                </div>
-                <div className="text-center justify-start text-red-500 text-base font-bold font-['Pretendard_Variable'] leading-none">
+              <div className={`self-stretch px-2 py-2 ${getStatusColor(label).bg} rounded-md inline-flex justify-center items-center gap-1`}>
+                <div className={`text-center justify-start ${getStatusColor(label).text} text-base font-bold font-['Pretendard_Variable'] leading-6`}>
                   {category}
                 </div>
               </div>
@@ -256,23 +247,20 @@ export default function SurveyResultPage() {
                   <div className="w-full relative overflow-hidden">
                     <div className="w-full inline-flex flex-col justify-center items-start">
                       <div className="w-full flex flex-col justify-center items-start gap-2">
-                        <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-tight">
-                          회원님의 불안지수는 {label} 수준이에요
+                        <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6">
+                          {category}지수 : <span className={getStatusColor(label).text}>{label}</span>
                         </div>
-                        <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-tight">
-                          평균점수 : {mean.toFixed(1)} 점
+                        <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-6 mt-4">
+                          나의점수 : {mean.toFixed(1)} 점
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="w-10 h-9 relative overflow-hidden flex-shrink-0 ml-2">
-                    <div className={`size-7 left-[4.88px] top-[2.92px] absolute ${getStatusColor(label).bg} rounded-full`} />
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="w-72 justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-tight">
+            <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-6 mt-4">
               {description}
             </div>
           </div>
@@ -281,19 +269,8 @@ export default function SurveyResultPage() {
       {/* BAI result section */}
       <div className="size-full px-5 py-10 bg-white flex flex-col justify-start items-start gap-5">
         <div className="self-stretch h-9 inline-flex justify-start items-start">
-          <div className="w-80 justify-start text-neutral-800 text-xl font-bold font-['Pretendard_Variable'] leading-loose">
+          <div className="w-full justify-start text-neutral-800 text-xl font-bold font-['Pretendard_Variable'] leading-relaxed">
             나의 BAI 불안척도 결과
-          </div>
-        </div>
-        
-        <div className="w-72 flex flex-col justify-start items-start gap-2.5">
-          <div className="px-2 py-1 bg-rose-100 rounded-[100px] inline-flex justify-center items-center gap-1">
-            <div className="size-3.5 relative overflow-hidden">
-              <div className="size-2.5 left-[1.75px] top-[1.71px] absolute bg-red-500" />
-            </div>
-            <div className="text-center justify-start text-red-500 text-base font-bold font-['Pretendard_Variable'] leading-none">
-              총점 : {baiResult.sum}점 / {baiResult.label}
-            </div>
           </div>
         </div>
         
@@ -303,19 +280,16 @@ export default function SurveyResultPage() {
               <div className="w-full relative overflow-hidden">
                 <div className="w-full inline-flex flex-col justify-center items-start">
                   <div className="w-full flex flex-col justify-center items-start gap-4">
-                    <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-tight">
-                      회원님의 불안지수는 {baiResult.label} 수준이에요
+                    <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6">
+                      BAI 불안척도 지수 : <span className={getStatusColor(baiResult.label).text}>{baiResult.label}</span> ({baiResult.sum}점)
                     </div>
                   </div>
-                  <div className="w-full flex flex-col justify-center items-start gap-4">
-                    <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-tight">
+                  <div className="w-full flex flex-col justify-center items-start gap-4 mt-4">
+                    <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-6">
                       {baiResult.description}
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="w-10 h-9 relative overflow-hidden flex-shrink-0 ml-2">
-                <div className={`size-7 left-[4.88px] top-[2.92px] absolute ${baiStatusColors.bg} rounded-full`} />
               </div>
             </div>
           </div>
@@ -333,7 +307,7 @@ export default function SurveyResultPage() {
             }}
             className="flex-1 px-4 py-4 bg-neutral-100 rounded-2xl flex justify-center items-center gap-2"
           >
-            <div className="text-center justify-center text-zinc-600 text-base font-semibold font-['Pretendard_Variable'] leading-none">
+            <div className="text-center justify-center text-zinc-600 text-base font-semibold font-['Pretendard_Variable'] leading-6">
               다시하기
             </div>
           </button>
@@ -341,7 +315,7 @@ export default function SurveyResultPage() {
             onClick={() => window.open('https://www.thenile.kr/pacer', '_blank')}
             className="flex-1 px-4 py-4 bg-sky-500 rounded-2xl flex justify-center items-center gap-2"
           >
-            <div className="text-center justify-center text-white text-base font-semibold font-['Pretendard_Variable'] leading-none">
+            <div className="text-center justify-center text-white text-base font-semibold font-['Pretendard_Variable'] leading-6">
               후원하기
             </div>
           </button>
