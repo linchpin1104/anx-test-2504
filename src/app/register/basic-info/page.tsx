@@ -17,10 +17,6 @@ export default function BasicInfoPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [userData, setUserData] = useState({
-    name: '',
-    phone: '',
-  });
 
   // 선택된 값들 관찰
   const caregiverType = watch('caregiverType');
@@ -38,64 +34,48 @@ export default function BasicInfoPage() {
         router.replace('/register');
         return;
       }
-      
-      setUserData({ name, phone });
     }
   }, [router]);
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = (data: FormValues) => {
+    console.log('폼 제출 시작', data);
     setSaving(true);
     setSaveError('');
     
     try {
       // 로컬 스토리지에 모든 정보 저장
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('childAge', data.childAge);
-        localStorage.setItem('childGender', data.childGender);
-        localStorage.setItem('parentAgeGroup', data.parentAgeGroup);
-        localStorage.setItem('caregiverType', data.caregiverType);
-        localStorage.setItem('region', data.region);
-      }
+      console.log('로컬 스토리지에 정보 저장 시작');
+      localStorage.setItem('childAge', data.childAge);
+      localStorage.setItem('childGender', data.childGender);
+      localStorage.setItem('parentAgeGroup', data.parentAgeGroup);
+      localStorage.setItem('caregiverType', data.caregiverType);
+      localStorage.setItem('region', data.region);
+      console.log('로컬 스토리지에 정보 저장 완료');
       
-      // 개발 환경에서는 Firebase 저장 과정 생략
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[DEV] 개발 모드에서 Firebase 저장 생략, 다음 페이지로 이동합니다.');
-        console.log('사용자 데이터:', {
-          ...userData,
-          ...data
-        });
+      console.log('다음 페이지로 이동 시작');
+      
+      // setTimeout을 사용하여 상태 업데이트 후 페이지 이동
+      setTimeout(() => {
+        // 직접 폼 제출 및 페이지 이동 처리
+        setSaving(false);
         
-        // 설문조사 페이지로 바로 이동
-        router.push('/survey');
-        return;
-      }
+        // 직접 링크 생성 및 클릭
+        const link = document.createElement('a');
+        link.href = '/survey';
+        link.setAttribute('data-replace-state', 'true');
+        document.body.appendChild(link);
+        link.click();
+        
+        // 백업 방법: 3초 후에도 페이지가 변경되지 않으면 window.location 사용
+        setTimeout(() => {
+          console.log('기본 이동 실패, window.location 시도');
+          window.location.href = '/survey';
+        }, 3000);
+      }, 300);
       
-      // 프로덕션 환경에서만 Firebase에 저장 시도
-      const memberRes = await fetch('/api/member', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: userData.name,
-          phone: userData.phone,
-          childAge: data.childAge,
-          childGender: data.childGender,
-          parentAgeGroup: data.parentAgeGroup,
-          caregiverType: data.caregiverType,
-          region: data.region,
-        }),
-      });
-      
-      if (!memberRes.ok) {
-        const errorData = await memberRes.json().catch(() => ({}));
-        throw new Error(errorData?.message || '정보 저장 중 오류가 발생했습니다.');
-      }
-      
-      // 설문조사 페이지로 이동
-      router.push('/survey');
     } catch (error) {
+      console.error('오류 발생:', error);
       setSaveError(error instanceof Error ? error.message : '오류가 발생했습니다. 다시 시도해주세요.');
-      console.error(error);
-    } finally {
       setSaving(false);
     }
   };
@@ -107,13 +87,6 @@ export default function BasicInfoPage() {
 
   return (
     <div className="bg-white flex flex-col min-h-screen">
-      {/* 헤더 */}
-      <div className="w-full h-24 relative overflow-hidden">
-        <div className="py-6 bg-white inline-flex flex-col justify-start items-end overflow-hidden">
-          <div className="w-full px-5 py-4 inline-flex justify-end items-center gap-3" />
-        </div>
-      </div>
-      
       {/* 타이틀 */}
       <div className="w-full px-5 py-8 bg-white flex flex-col justify-start items-start gap-5 overflow-hidden">
         <div className="self-stretch text-center justify-end text-neutral-800 text-xl font-bold leading-7">
@@ -218,7 +191,7 @@ export default function BasicInfoPage() {
               {...register('childAge', { required: true })}
               className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
               min="0"
-              placeholder="개월 수 입력"
+              placeholder="만나이를 입력"
             />
             {errors.childAge && (
               <p className="text-red-600 text-sm mt-1">아이 연령을 입력해주세요</p>
@@ -265,7 +238,7 @@ export default function BasicInfoPage() {
               type="text"
               {...register('region', { required: true })}
               className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
-              placeholder="서울시-성동구"
+              placeholder="거주하고 있는 지역 ㅇㅇ시 ㅇㅇ구까지 입력"
             />
             {errors.region && (
               <p className="text-red-600 text-sm mt-1">지역을 입력해주세요</p>

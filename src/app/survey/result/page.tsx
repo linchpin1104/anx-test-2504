@@ -41,10 +41,6 @@ interface ResultData {
   };
 }
 
-type CategoryColors = {
-  [key: string]: string;
-};
-
 export default function SurveyResultPage() {
   const router = useRouter();
   const [resultData, setResultData] = useState<ResultData | null>(null);
@@ -64,29 +60,11 @@ export default function SurveyResultPage() {
     return <div className="p-4 text-center">결과를 불러오는 중...</div>;
   }
 
-  const { globalResult, categoryResults, baiResult, userInfo } = resultData;
-  const userName = userInfo?.name || "회원님";
-
-  // Define category colors
-  const categoryColors: CategoryColors = {
-    '부모역할 효능감으로 불안': 'bg-sky-500',
-    '완벽주의로 인한 불안': 'bg-sky-500',
-    '사회적지지에 대한 불안': 'bg-sky-500',
-    '자녀에 대한 염려': 'bg-sky-500',
-    '자녀와의 애착에 대한 염려': 'bg-sky-500',
-  };
+  const { globalResult, categoryResults, baiResult } = resultData;
 
   // Convert Tailwind classes to hex colors for the chart
-  const getTailwindColor = (className: string): string => {
-    switch(className) {
-      case 'bg-rose-400': return '#fb7185';
-      case 'bg-sky-700': return '#0369a1';
-      case 'bg-green-600': return '#16a34a';
-      case 'bg-cyan-600': return '#0891b2';
-      case 'bg-red-500': return '#ef4444';
-      case 'bg-sky-500': return '#0ea5e9';
-      default: return '#6366F1';
-    }
+  const getTailwindColor = (): string => {
+    return '#0ea5e9'; // sky-500 color
   };
 
   // Get anxiety level color and background
@@ -123,9 +101,6 @@ export default function SurveyResultPage() {
       };
     }
   };
-
-  const globalStatusColors = getStatusColor(globalResult.label);
-  const baiStatusColors = getStatusColor(baiResult.label);
 
   return (
     <div className="w-full max-w-md mx-auto bg-white flex flex-col min-h-screen">
@@ -215,8 +190,8 @@ export default function SurveyResultPage() {
                       key={category}
                       name={category} 
                       dataKey="value" 
-                      stroke={getTailwindColor('bg-sky-500')}
-                      fill={getTailwindColor('bg-sky-500')}
+                      stroke={getTailwindColor()}
+                      fill={getTailwindColor()}
                       fillOpacity={0.1}
                       isAnimationActive={true}
                       dot

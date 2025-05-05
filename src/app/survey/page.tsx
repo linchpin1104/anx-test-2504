@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, FieldErrors } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 interface Question {
   category: string;
@@ -198,18 +197,6 @@ export default function SurveyPage() {
     <div className="w-full max-w-md mx-auto bg-white flex flex-col min-h-screen">
       {/* Content container */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Logo */}
-        <div className="w-full flex justify-center pt-6 pb-2">
-          <Image
-            src="/images/logo.png"
-            alt="더나일 로고"
-            width={120}
-            height={40}
-            priority
-            className="object-contain"
-          />
-        </div>
-        
         {/* Title container */}
         <div className="w-full px-5 pt-8 pb-5 flex flex-col justify-start items-start gap-3">
           <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-loose">양육불안도 검사 (총 47문항)</div>
@@ -234,6 +221,13 @@ export default function SurveyPage() {
           <div className="w-full px-5 pt-5 pb-4 flex-1 flex flex-col justify-start items-start gap-8 overflow-y-auto">
             {questions.map((q, idx) => (
               <div key={q.id} className="self-stretch flex flex-col justify-start items-start gap-3 w-full">
+                {idx === 27 && (
+                  <div className="self-stretch px-4 py-4 bg-sky-50 rounded-lg outline outline-1 outline-offset-[-1px] outline-sky-100 flex flex-col justify-start items-start gap-2 mb-6">
+                    <div className="self-stretch text-sky-800 text-sm font-medium font-['Pretendard_Variable'] leading-normal">
+                      다음의 문항을 읽으시고 현재 상태에 해당하는 것을 0~3점으로 표시해주세요. 지난 1주일간 겪었던 일반적인 불안 증상을 떠올리며 편한 마음으로 답변하시면 됩니다.
+                    </div>
+                  </div>
+                )}
                 <div className="self-stretch inline-flex justify-start items-start gap-1">
                   <div className="justify-start text-black text-base font-semibold font-['Pretendard_Variable'] leading-normal">{idx + 1}.</div>
                   <div className="flex-1 justify-start text-black text-base font-semibold font-['Pretendard_Variable'] leading-normal">{q.text}</div>

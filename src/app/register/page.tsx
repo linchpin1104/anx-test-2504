@@ -134,17 +134,13 @@ export default function RegisterPage() {
     <div className="bg-white flex flex-col min-h-screen">
       {/* 상단 상태바는 생략 (모바일 브라우저에서 자동 표시됨) */}
       
-      {/* 헤더 */}
-      <div className="w-full h-24 relative overflow-hidden">
-        <div className="py-6 bg-white inline-flex flex-col justify-start items-end overflow-hidden">
-          <div className="w-full px-5 py-4 inline-flex justify-end items-center gap-3" />
-        </div>
-      </div>
-      
       {/* 타이틀 */}
       <div className="w-full px-5 py-8 bg-white flex flex-col justify-start items-start gap-5 overflow-hidden">
         <div className="self-stretch text-center justify-end text-neutral-800 text-xl font-bold leading-7">
           더나일의 양육불안 검사를<br/>소개합니다
+        </div>
+        <div className="self-stretch text-center text-neutral-600 text-[15px] leading-6 mt-3">
+          자녀를 양육하면서 느끼는 정서, 능력, 관계에 대한 양육불안과 우울감을 통합적으로 측정합니다. 낮은 양육불안은 양육에 대한 자신감이 높으며, 자녀와 관계를 맺고 정서를 다루는 것에 대한 안정감이 있음을 의미할 수 있지요.
         </div>
       </div>
       
