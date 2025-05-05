@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, FieldErrors } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface Question {
   category: string;
@@ -79,10 +80,23 @@ export default function SurveyPage() {
     setLoading(true);
     setError('');
     try {
+      // 로컬 스토리지에서 사용자 정보 가져오기
+      const userInfo = {
+        name: localStorage.getItem('registerName') || '',
+        phone: localStorage.getItem('registerPhone') || '',
+        childAge: localStorage.getItem('childAge') || '',
+        childGender: localStorage.getItem('childGender') || '',
+        parentAgeGroup: localStorage.getItem('parentAgeGroup') || '',
+        caregiverType: localStorage.getItem('caregiverType') || '',
+      };
+
       const res = await fetch('/api/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: data }),
+        body: JSON.stringify({ 
+          answers: data,
+          userInfo: userInfo // 사용자 정보도 함께 전송
+        }),
       });
       
       if (!res.ok) {
@@ -93,7 +107,12 @@ export default function SurveyPage() {
       const json: ResultData = await res.json();
       // Save result and navigate to result page
       if (typeof window !== 'undefined') {
-        localStorage.setItem('surveyResult', JSON.stringify(json));
+        // 사용자 정보도 결과에 포함하여 저장
+        const resultWithUserInfo = {
+          ...json,
+          userInfo: userInfo
+        };
+        localStorage.setItem('surveyResult', JSON.stringify(resultWithUserInfo));
       }
       router.push('/survey/result');
     } catch (err) {
@@ -179,6 +198,18 @@ export default function SurveyPage() {
     <div className="w-full max-w-md mx-auto bg-white flex flex-col min-h-screen">
       {/* Content container */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Logo */}
+        <div className="w-full flex justify-center pt-6 pb-2">
+          <Image
+            src="/images/logo.png"
+            alt="더나일 로고"
+            width={120}
+            height={40}
+            priority
+            className="object-contain"
+          />
+        </div>
+        
         {/* Title container */}
         <div className="w-full px-5 pt-8 pb-5 flex flex-col justify-start items-start gap-3">
           <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-loose">양육불안도 검사 (총 47문항)</div>

@@ -23,13 +23,17 @@ interface ReportConfig {
 
 export async function POST(request: Request) {
   // Parse request body
-  const { answers } = await request.json();
+  const { answers, userInfo } = await request.json();
 
   // Attempt to save raw answers to Firestore (skip if misconfigured)
   let rawDocRef!: admin.firestore.DocumentReference<admin.firestore.DocumentData>;
   try {
     rawDocRef = firestore.collection('responses').doc();
-    await rawDocRef.set({ answers, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+    await rawDocRef.set({ 
+      answers, 
+      userInfo,
+      createdAt: admin.firestore.FieldValue.serverTimestamp() 
+    });
   } catch (e) {
     console.warn('[Result API] Firestore write skipped:', e);
   }
@@ -103,7 +107,12 @@ export async function POST(request: Request) {
   // Attempt to save computed results (skip if write failed)
   if (rawDocRef) {
     try {
-      await rawDocRef.update({ categoryResults, globalResult, baiResult });
+      await rawDocRef.update({ 
+        categoryResults, 
+        globalResult, 
+        baiResult,
+        userInfo
+      });
     } catch (e) {
       console.warn('[Result API] Firestore update skipped:', e);
     }

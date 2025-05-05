@@ -31,6 +31,14 @@ interface ResultData {
   categoryResults: Record<string, CategoryResult>;
   globalResult: CategoryResult;
   baiResult: BaiResult;
+  userInfo?: {
+    name: string;
+    phone: string;
+    childAge: string;
+    childGender: string;
+    parentAgeGroup: string;
+    caregiverType: string;
+  };
 }
 
 type CategoryColors = {

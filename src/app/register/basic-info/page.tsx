@@ -9,6 +9,7 @@ interface FormValues {
   parentAgeGroup: string;
   childAge: string;
   childGender: string;
+  region: string;
 }
 
 export default function BasicInfoPage() {
@@ -47,6 +48,15 @@ export default function BasicInfoPage() {
     setSaveError('');
     
     try {
+      // 로컬 스토리지에 모든 정보 저장
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('childAge', data.childAge);
+        localStorage.setItem('childGender', data.childGender);
+        localStorage.setItem('parentAgeGroup', data.parentAgeGroup);
+        localStorage.setItem('caregiverType', data.caregiverType);
+        localStorage.setItem('region', data.region);
+      }
+      
       // 개발 환경에서는 Firebase 저장 과정 생략
       if (process.env.NODE_ENV === 'development') {
         console.log('[DEV] 개발 모드에서 Firebase 저장 생략, 다음 페이지로 이동합니다.');
@@ -71,6 +81,7 @@ export default function BasicInfoPage() {
           childGender: data.childGender,
           parentAgeGroup: data.parentAgeGroup,
           caregiverType: data.caregiverType,
+          region: data.region,
         }),
       });
       
@@ -241,6 +252,25 @@ export default function BasicInfoPage() {
           {errors.childGender && (
             <p className="text-red-600 text-sm mt-1">아이 성별을 선택해주세요</p>
           )}
+        </div>
+        
+        {/* 지역 입력 필드 (새로 추가) */}
+        <div className="w-full p-5 bg-white flex flex-col justify-start items-start gap-3 overflow-hidden">
+          <div className="self-stretch justify-start">
+            <span className="text-neutral-800 text-lg font-bold leading-relaxed">지역</span>
+            <span className="text-red-500 text-lg font-bold leading-relaxed">*</span>
+          </div>
+          <div className="w-full flex flex-col justify-start items-start gap-1">
+            <input
+              type="text"
+              {...register('region', { required: true })}
+              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+              placeholder="서울시-성동구"
+            />
+            {errors.region && (
+              <p className="text-red-600 text-sm mt-1">지역을 입력해주세요</p>
+            )}
+          </div>
         </div>
         
         {/* 버튼 */}
