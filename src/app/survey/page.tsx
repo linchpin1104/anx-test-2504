@@ -3,6 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, FieldErrors } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
+import ErrorMessage from '../components/ErrorMessage';
+import { 
+  ErrorType, 
+  handleError, 
+  handleApiError, 
+  safeGetItem, 
+  safeSetItem, 
+  getUserFriendlyErrorMessage 
+} from '../utils/errorHandler';
 
 interface Question {
   category: string;
@@ -32,10 +41,9 @@ type FormValues = Record<string, string>;
 
 export default function SurveyPage() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{ type?: ErrorType; message: string } | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
-  const [questionsError, setQuestionsError] = useState('');
   const { register, handleSubmit, formState: { errors }, watch } = useForm<FormValues>();
   const router = useRouter();
 
@@ -54,69 +62,113 @@ export default function SurveyPage() {
     { value: 3, label: '심각하게 그렇다' },
   ];
 
+  // 질문 데이터 로딩
   useEffect(() => {
+    let isMounted = true;
     setQuestionsLoading(true);
-    setQuestionsError('');
-    fetch('/api/questions')
-      .then((res) => {
+    setError(null);
+    
+    const fetchQuestions = async () => {
+      try {
+        const res = await fetch('/api/questions');
+        
         if (!res.ok) {
-          throw new Error('질문을 불러오는데 실패했습니다.');
+          throw await handleApiError(res);
         }
-        return res.json();
-      })
-      .then((data: Question[]) => {
-        setQuestions(data);
-        setQuestionsLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setQuestionsError(err instanceof Error ? err.message : '질문을 불러오는데 오류가 발생했습니다.');
-        setQuestionsLoading(false);
-      });
+        
+        const data: Question[] = await res.json();
+        
+        if (isMounted) {
+          setQuestions(data);
+          setQuestionsLoading(false);
+        }
+      } catch (err) {
+        console.error('질문 로딩 오류:', err);
+        const appError = handleError(err);
+        
+        if (isMounted) {
+          setError({
+            type: appError.type,
+            message: appError.message || '질문을 불러오는데 실패했습니다.'
+          });
+          setQuestionsLoading(false);
+        }
+      }
+    };
+    
+    fetchQuestions();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // 폼 제출 처리
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
-    setError('');
+    setError(null);
+    
     try {
       // 로컬 스토리지에서 사용자 정보 가져오기
       const userInfo = {
-        name: localStorage.getItem('registerName') || '',
-        phone: localStorage.getItem('registerPhone') || '',
-        childAge: localStorage.getItem('childAge') || '',
-        childGender: localStorage.getItem('childGender') || '',
-        parentAgeGroup: localStorage.getItem('parentAgeGroup') || '',
-        caregiverType: localStorage.getItem('caregiverType') || '',
+        name: safeGetItem('registerName'),
+        phone: safeGetItem('registerPhone'),
+        childAge: safeGetItem('childAge'),
+        childGender: safeGetItem('childGender'),
+        parentAgeGroup: safeGetItem('parentAgeGroup'),
+        caregiverType: safeGetItem('caregiverType'),
       };
+      
+      // 필수 사용자 정보 확인
+      if (!userInfo.name || !userInfo.phone) {
+        throw { 
+          type: ErrorType.VALIDATION, 
+          message: '사용자 정보가 없습니다. 다시 로그인해주세요.' 
+        };
+      }
 
+      // API 요청
       const res = await fetch('/api/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           answers: data,
-          userInfo: userInfo // 사용자 정보도 함께 전송
+          userInfo: userInfo
         }),
       });
       
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData?.message || '제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+        throw await handleApiError(res);
       }
       
       const json: ResultData = await res.json();
-      // Save result and navigate to result page
+      
+      // 결과 저장 및 페이지 이동
       if (typeof window !== 'undefined') {
         // 사용자 정보도 결과에 포함하여 저장
         const resultWithUserInfo = {
           ...json,
           userInfo: userInfo
         };
-        localStorage.setItem('surveyResult', JSON.stringify(resultWithUserInfo));
+        
+        const saved = safeSetItem('surveyResult', JSON.stringify(resultWithUserInfo));
+        if (!saved) {
+          throw { 
+            type: ErrorType.STORAGE, 
+            message: '결과를 저장하는데 실패했습니다. 브라우저 설정을 확인해주세요.' 
+          };
+        }
       }
+      
       router.push('/survey/result');
+      
     } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : '제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+      console.error('제출 오류:', err);
+      const appError = handleError(err);
+      setError({
+        type: appError.type,
+        message: getUserFriendlyErrorMessage(err)
+      });
     } finally {
       setLoading(false);
     }
@@ -130,25 +182,35 @@ export default function SurveyPage() {
   };
 
   if (questionsLoading) {
-    return <div className="p-4 text-center">질문을 불러오는 중입니다...</div>;
+    return (
+      <div className="w-full max-w-md mx-auto p-8 flex flex-col items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-t-4 border-sky-500 border-solid rounded-full animate-spin"></div>
+        <p className="text-lg mt-4 text-gray-700">질문을 불러오는 중입니다...</p>
+      </div>
+    );
   }
 
-  if (questionsError) {
+  if (error && questionsLoading) {
     return (
-      <div className="p-4 text-center">
-        <p className="text-red-600 mb-4">{questionsError}</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded"
-        >
-          다시 시도
-        </button>
+      <div className="w-full max-w-md mx-auto p-6">
+        <ErrorMessage 
+          type={error.type}
+          message={error.message}
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }
 
   if (questions.length === 0) {
-    return <div className="p-4 text-center">질문이 없습니다. 관리자에게 문의하세요.</div>;
+    return (
+      <div className="w-full max-w-md mx-auto p-6">
+        <ErrorMessage 
+          type={ErrorType.SERVER}
+          message="질문 데이터를 찾을 수 없습니다. 관리자에게 문의하세요."
+        />
+      </div>
+    );
   }
 
   // If result exists, show result UI
@@ -215,6 +277,17 @@ export default function SurveyPage() {
             <div className="self-stretch justify-center text-zinc-600 text-xs font-normal font-['Pretendard_Variable'] leading-tight">모든 질문에 응답해주세요. 제출 후에는 수정이 불가능합니다.</div>
           </div>
         </div>
+
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div className="w-full px-5 mb-3">
+            <ErrorMessage 
+              type={error.type}
+              message={error.message}
+              onRetry={() => setError(null)}
+            />
+          </div>
+        )}
 
         {/* Survey form */}
         <form onSubmit={handleSubmit(onSubmit, onError)} className="w-full flex-1 flex flex-col">
@@ -283,13 +356,6 @@ export default function SurveyPage() {
             </div>
           </div>
         </form>
-
-        {error && (
-          <div className="w-full px-5 mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            <p className="font-medium">제출 오류</p>
-            <p>{error}</p>
-          </div>
-        )}
       </div>
     </div>
   );

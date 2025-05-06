@@ -3,6 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
+import ErrorMessage from '../../components/ErrorMessage';
+import { 
+  ErrorType, 
+  handleError, 
+  safeGetItem, 
+  safeSetItem, 
+  getUserFriendlyErrorMessage 
+} from '../../utils/errorHandler';
 
 interface FormValues {
   caregiverType: string;
@@ -16,7 +24,7 @@ export default function BasicInfoPage() {
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormValues>();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
+  const [error, setError] = useState<{ type?: ErrorType; message: string } | null>(null);
 
   // 선택된 값들 관찰
   const caregiverType = watch('caregiverType');
@@ -25,57 +33,71 @@ export default function BasicInfoPage() {
 
   useEffect(() => {
     // 로컬 스토리지에서 이름과 전화번호 불러오기
-    if (typeof window !== 'undefined') {
-      const name = localStorage.getItem('registerName') || '';
-      const phone = localStorage.getItem('registerPhone') || '';
+    try {
+      const name = safeGetItem('registerName');
+      const phone = safeGetItem('registerPhone');
       
       if (!name || !phone) {
         // 이름이나 전화번호가 없으면 첫 단계로 리다이렉트
         router.replace('/register');
         return;
       }
+    } catch (err) {
+      const appError = handleError(err);
+      setError({
+        type: appError.type,
+        message: '사용자 정보를 가져오는데 실패했습니다. 다시 시도해주세요.'
+      });
+      
+      // 3초 후 로그인 페이지로 리다이렉트
+      setTimeout(() => {
+        router.replace('/register');
+      }, 3000);
     }
   }, [router]);
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     console.log('폼 제출 시작', data);
     setSaving(true);
-    setSaveError('');
+    setError(null);
     
     try {
       // 로컬 스토리지에 모든 정보 저장
       console.log('로컬 스토리지에 정보 저장 시작');
-      localStorage.setItem('childAge', data.childAge);
-      localStorage.setItem('childGender', data.childGender);
-      localStorage.setItem('parentAgeGroup', data.parentAgeGroup);
-      localStorage.setItem('caregiverType', data.caregiverType);
-      localStorage.setItem('region', data.region);
+      
+      // 모든 저장 작업을 Promise로 래핑하여 한번에 처리
+      const storagePromises = [
+        safeSetItem('childAge', data.childAge),
+        safeSetItem('childGender', data.childGender),
+        safeSetItem('parentAgeGroup', data.parentAgeGroup),
+        safeSetItem('caregiverType', data.caregiverType),
+        safeSetItem('region', data.region)
+      ];
+      
+      // 모든 저장 작업이 성공했는지 확인
+      const storageResults = await Promise.all(storagePromises);
+      
+      if (storageResults.some(result => !result)) {
+        throw new Error('일부 정보를 저장하는데 실패했습니다.');
+      }
+      
       console.log('로컬 스토리지에 정보 저장 완료');
       
+      // 서버 통신을 시뮬레이션(실제로는 서버에 정보를 저장하는 API 호출을 할 수 있음)
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // 페이지 이동
       console.log('다음 페이지로 이동 시작');
+      router.push('/survey');
       
-      // setTimeout을 사용하여 상태 업데이트 후 페이지 이동
-      setTimeout(() => {
-        // 직접 폼 제출 및 페이지 이동 처리
-        setSaving(false);
-        
-        // 직접 링크 생성 및 클릭
-        const link = document.createElement('a');
-        link.href = '/survey';
-        link.setAttribute('data-replace-state', 'true');
-        document.body.appendChild(link);
-        link.click();
-        
-        // 백업 방법: 3초 후에도 페이지가 변경되지 않으면 window.location 사용
-        setTimeout(() => {
-          console.log('기본 이동 실패, window.location 시도');
-          window.location.href = '/survey';
-        }, 3000);
-      }, 300);
-      
-    } catch (error) {
-      console.error('오류 발생:', error);
-      setSaveError(error instanceof Error ? error.message : '오류가 발생했습니다. 다시 시도해주세요.');
+    } catch (err) {
+      console.error('오류 발생:', err);
+      const appError = handleError(err);
+      setError({
+        type: appError.type,
+        message: getUserFriendlyErrorMessage(err)
+      });
+    } finally {
       setSaving(false);
     }
   };
@@ -83,6 +105,11 @@ export default function BasicInfoPage() {
   // 칩 버튼 클릭 핸들러
   const handleChipClick = (field: keyof FormValues, value: string) => {
     setValue(field, value);
+  };
+
+  // 폼 재시도 핸들러
+  const handleRetry = () => {
+    setError(null);
   };
 
   return (
@@ -93,6 +120,17 @@ export default function BasicInfoPage() {
           검사자의 기본정보를<br/>알려주세요
         </div>
       </div>
+      
+      {/* 에러 메시지 표시 */}
+      {error && (
+        <div className="px-5">
+          <ErrorMessage 
+            type={error.type}
+            message={error.message}
+            onRetry={handleRetry}
+          />
+        </div>
+      )}
       
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* 양육자 정보 */}
@@ -263,12 +301,6 @@ export default function BasicInfoPage() {
               </span>
             ) : '다음으로'}
           </button>
-          {saveError && (
-            <div className="w-full p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              <p className="font-medium">저장 오류</p>
-              <p>{saveError}</p>
-            </div>
-          )}
         </div>
       </form>
       

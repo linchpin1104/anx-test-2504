@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
   return (
@@ -9,7 +10,7 @@ export default function Header() {
       <div className="flex items-center">
         <Link href="/">
           <div className="h-16 flex items-center">
-            <div className="text-2xl font-bold text-sky-500">더나일</div>
+            <Image src="/logo.png" alt="더나일" width={120} height={40} />
           </div>
         </Link>
       </div>
