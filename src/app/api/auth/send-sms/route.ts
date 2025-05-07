@@ -126,14 +126,38 @@ export async function POST(request: Request) {
 
     try {
       // 프로덕션 환경에서는 실제 SMS 발송
+      const date = new Date().toISOString();
+      const salt = Math.random().toString(36).substring(7);
+      const signature = apiSecret; // 실제로는 HMAC-SHA256 서명을 생성해야 함
+
+      console.log('SMS API 요청 준비:', {
+        url: 'https://api.solapi.com/messages/v4/send',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`
+        },
+        body: { message }
+      });
+
       const response = await fetch('https://api.solapi.com/messages/v4/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(7)}, signature=${apiSecret}`
+          'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`
         },
         body: JSON.stringify({ message })
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('SMS API 응답 오류:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        throw new Error(`SMS API 응답 오류: ${response.status} ${response.statusText}`);
+      }
 
       const result = await response.json();
       console.log('SMS 발송 결과:', {
@@ -152,7 +176,12 @@ export async function POST(request: Request) {
         throw new Error(result.errorMessage || 'SMS 발송에 실패했습니다.');
       }
     } catch (smsError) {
-      console.error('SMS 발송 오류:', smsError);
+      console.error('SMS 발송 오류:', {
+        error: smsError instanceof Error ? smsError.message : '알 수 없는 오류',
+        stack: smsError instanceof Error ? smsError.stack : undefined,
+        phone: normalizedPhone,
+        timestamp: new Date().toISOString()
+      });
       return NextResponse.json(
         { success: false, message: 'SMS 발송 중 오류가 발생했습니다.' },
         { status: 500 }
@@ -160,7 +189,11 @@ export async function POST(request: Request) {
     }
 
   } catch (error) {
-    console.error('예상치 못한 오류:', error);
+    console.error('예상치 못한 오류:', {
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     return NextResponse.json(
       { success: false, message: '인증번호 발송 중 오류가 발생했습니다.' },
       { status: 500 }
