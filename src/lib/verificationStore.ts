@@ -117,13 +117,17 @@ export async function incrementAttempts(phone: string): Promise<boolean> {
     const data = doc.data();
     const currentAttempts = (data?.attempts || 0) + 1;
 
-    // 인증 시도 횟수 제한 제거 - 항상 true 반환
-    // if (currentAttempts >= MAX_ATTEMPTS) {
-    //   console.log('최대 시도 횟수 초과:', { phone, attempts: currentAttempts });
-    //   // 최대 시도 횟수 초과 시 인증 코드 삭제
-    //   await deleteVerificationCode(phone);
-    //   return false;
-    // }
+    // 인증 시도 횟수 기록은 하되, 제한은 적용하지 않음
+    if (currentAttempts >= MAX_ATTEMPTS) {
+      console.log('인증 시도 횟수가 많음 (하지만 제한 없음):', { 
+        phone, 
+        attempts: currentAttempts,
+        maxAttempts: MAX_ATTEMPTS 
+      });
+      // 제한 적용하지 않음
+      // await deleteVerificationCode(phone);
+      // return false;
+    }
 
     await docRef.update({ attempts: currentAttempts });
     console.log('인증 시도 횟수 증가 성공:', { phone, attempts: currentAttempts });
