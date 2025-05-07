@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
 import { setVerificationCode } from '@/lib/verificationStore';
+import crypto from 'crypto';
 
 // 전화번호 형식 정규화
 function normalizePhoneNumber(phone: string): string {
   return phone.replace(/[^0-9]/g, '');
+}
+
+// HMAC-SHA256 서명 생성
+function generateSignature(apiSecret: string, date: string, salt: string): string {
+  const message = `date=${date}\nsalt=${salt}`;
+  const signature = crypto
+    .createHmac('sha256', apiSecret)
+    .update(message)
+    .digest('hex');
+  return signature;
 }
 
 // SMS 메시지 타입 정의
@@ -128,7 +139,7 @@ export async function POST(request: Request) {
       // 프로덕션 환경에서는 실제 SMS 발송
       const date = new Date().toISOString();
       const salt = Math.random().toString(36).substring(7);
-      const signature = apiSecret; // 실제로는 HMAC-SHA256 서명을 생성해야 함
+      const signature = generateSignature(apiSecret, date, salt);
 
       console.log('SMS API 요청 준비:', {
         url: 'https://api.solapi.com/messages/v4/send',
