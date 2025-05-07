@@ -3,10 +3,10 @@ import { firestore } from '@/lib/firebaseAdmin';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const shareId = context.params.id;
+    const { id: shareId } = await params;
     
     if (!shareId) {
       return NextResponse.json(

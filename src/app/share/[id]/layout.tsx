@@ -3,7 +3,7 @@ import { Metadata, ResolvingMetadata } from 'next';
 // import { firestore } from '@/lib/firebaseAdmin';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   children: React.ReactNode;
 };
 
@@ -13,7 +13,7 @@ export async function generateMetadata(
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   // 공유 ID로부터 결과 데이터 검색
-  const id = params.id;
+  const { id } = await params;
   const title = '양육불안도 검사 결과';
   const description = '양육 과정에서 겪는 불안과 스트레스를 측정한 결과입니다.';
   

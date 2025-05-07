@@ -1,4 +1,5 @@
 import { firestore } from '@/lib/firebaseAdmin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 // 인증 코드 저장소 (실제로는 Redis 또는 다른 데이터베이스를 사용해야 함)
 // key: 전화번호, value: {code: 인증코드, expires: 만료시간}
@@ -16,8 +17,8 @@ export async function setVerificationCode(phone: string, code: string, expiresAt
   try {
     await firestore.collection('verifications').doc(phone).set({
       code,
-      expiresAt: firestore.Timestamp.fromDate(expiresAt),
-      createdAt: firestore.Timestamp.fromDate(new Date())
+      expiresAt: Timestamp.fromDate(expiresAt),
+      createdAt: Timestamp.fromDate(new Date())
     });
   } catch (error) {
     console.error('Error saving verification code:', error);
