@@ -110,7 +110,7 @@ export async function POST(request: Request) {
     }
 
     // SMS 발송
-    const smsMessage = {
+    const smsMessage: Message = {
       to: normalizedPhone,
       from: senderNumber,
       text: `[더나일] 인증번호는 [${code}] 입니다.`
