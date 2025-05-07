@@ -8,20 +8,41 @@ try {
     const projectId = process.env.FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
-    if (projectId && clientEmail && privateKeyRaw) {
-      const privateKey = privateKeyRaw.replace(/\\n/g, '\n');
-      admin.initializeApp({
-        credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-      });
-      firestoreInstance = admin.firestore();
-    } else {
+
+    if (!projectId || !clientEmail || !privateKeyRaw) {
       console.warn('[firebaseAdmin] Missing Firebase env vars, skipping initialization.');
+      console.warn('[firebaseAdmin] Available env vars:', {
+        hasProjectId: !!projectId,
+        hasClientEmail: !!clientEmail,
+        hasPrivateKey: !!privateKeyRaw
+      });
+    } else {
+      try {
+        // private key comes in as a string with escaped newlines, convert them to actual newlines
+        const privateKey = privateKeyRaw.includes('\\n') 
+          ? privateKeyRaw.replace(/\\n/g, '\n')
+          : privateKeyRaw;
+
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId,
+            clientEmail,
+            privateKey,
+          }),
+        });
+        
+        firestoreInstance = admin.firestore();
+        console.log('[firebaseAdmin] Successfully initialized Firebase Admin');
+      } catch (initError) {
+        console.error('[firebaseAdmin] Failed to initialize:', initError);
+        throw initError;
+      }
     }
   } else {
     firestoreInstance = admin.firestore();
   }
 } catch (e) {
-  console.warn('[firebaseAdmin] Initialization error:', e);
+  console.error('[firebaseAdmin] Initialization error:', e);
 }
 
 // If initialized, use actual Firestore, otherwise stub with no-op methods
