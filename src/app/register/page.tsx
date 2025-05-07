@@ -29,7 +29,7 @@ export default function RegisterPage() {
       const smsRes = await fetch('/api/auth/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: data.phone }),
+        body: JSON.stringify({ phoneNumber: data.phone }),
       });
       
       // 응답 파싱 시도
