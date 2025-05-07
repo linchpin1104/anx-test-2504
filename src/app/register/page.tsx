@@ -10,9 +10,6 @@ interface FormValues {
   code: string;
 }
 
-// 개발환경 여부 확인
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>();
   const router = useRouter();
@@ -28,26 +25,6 @@ export default function RegisterPage() {
     setSendError('');
     
     try {
-      // 개발 모드에서는 API 호출 우회
-      if (isDevelopment) {
-        console.log('[DEV] 인증번호 요청 가상 처리');
-        // 가상 코드 생성
-        const mockCode = '123456';
-        setDevCode(mockCode);
-        setValue('code', mockCode);
-        
-        // 로컬 스토리지에 이름과 전화번호 저장
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('registerName', data.name);
-          localStorage.setItem('registerPhone', data.phone);
-        }
-        
-        // 성공 상태로 설정
-        setCodeSent(true);
-        setSending(false);
-        return;
-      }
-      
       // 프로덕션 모드에서는 실제 API 호출
       const smsRes = await fetch('/api/auth/send-sms', {
         method: 'POST',
@@ -90,13 +67,6 @@ export default function RegisterPage() {
   };
 
   const onVerify = async (data: FormValues) => {
-    // Dev shortcut: bypass API call for code '0000'
-    if (data.code === '0000' || isDevelopment) {
-      // 개발 모드에서는 항상 성공으로 처리
-      router.push('/register/basic-info');
-      return;
-    }
-    
     setVerifying(true);
     setVerifyError('');
     
@@ -131,7 +101,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="bg-white flex flex-col min-h-screen">
+    <div className="bg-white flex flex-col">
       {/* 상단 상태바는 생략 (모바일 브라우저에서 자동 표시됨) */}
       
       {/* 타이틀 */}
@@ -260,40 +230,6 @@ export default function RegisterPage() {
           )}
         </div>
       </form>
-      
-      {/* 푸터 */}
-      <div className="w-full px-5 py-8 bg-neutral-100 flex flex-col justify-start items-start gap-4 mt-auto">
-        <div className="text-zinc-600 text-xs font-semibold">사단법인 STAMP</div>
-        <div className="flex flex-col justify-start items-start gap-1">
-          <div className="text-zinc-600 text-xs">대표</div>
-          <div className="text-zinc-600 text-xs">개인정보보호책임자</div>
-          <div className="text-zinc-600 text-xs">사업자등록번호</div>
-          <div className="text-zinc-600 text-xs">통신판매업신고</div>
-          <div className="text-zinc-600 text-xs">고객 센터</div>
-          <div className="text-zinc-600 text-xs">서울특별시</div>
-          <div className="inline-flex justify-start items-center gap-3 mt-2">
-            <div className="text-zinc-600 text-xs font-semibold">서비스 소개</div>
-            <div className="w-px h-3 bg-zinc-600" />
-            <div className="text-zinc-600 text-xs font-semibold">서비스이용약관</div>
-            <div className="w-px h-3 bg-zinc-600" />
-            <div className="text-zinc-600 text-xs font-semibold">개인정보처리방침</div>
-          </div>
-        </div>
-        <div className="inline-flex justify-start items-center gap-2 mt-2">
-          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
-            <div className="w-4 h-3.5 bg-neutral-400" />
-          </div>
-          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
-            <div className="w-4 h-2.5 bg-neutral-400" />
-          </div>
-          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
-            <div className="w-3.5 h-3.5 bg-neutral-400" />
-          </div>
-          <button className="px-3 py-2.5 rounded-lg outline outline-1 outline-neutral-200 flex justify-center items-center gap-1 text-zinc-600 text-sm font-semibold">
-            1:1 문의하기
-          </button>
-        </div>
-      </div>
     </div>
   );
 } 

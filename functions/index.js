@@ -9,15 +9,22 @@ admin.initializeApp();
 // Google Sheets 인증 정보 설정
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const SHEET_ID = '1Nfq8Ydkrsja-hD_oO33ySWFZ_fD2hChCl_a3ZQj-F08'; // 실제 스프레드시트 ID로 변경
+const KEY_FILE_PATH = path.join(__dirname, 'serviceAccountKey.json');
 
-// Firebase Functions의 기본 인증을 사용 (서비스 계정 키 파일 불필요)
+// 서비스 계정 키 파일을 사용한 인증
 async function getAuthToken() {
-  // Cloud Functions 환경에서는 Application Default Credentials 사용
-  const auth = new google.auth.GoogleAuth({
-    scopes: SCOPES,
-  });
-  const authClient = await auth.getClient();
-  return authClient;
+  try {
+    // 서비스 계정 키 파일 사용
+    const auth = new google.auth.GoogleAuth({
+      keyFile: KEY_FILE_PATH,
+      scopes: SCOPES,
+    });
+    const authClient = await auth.getClient();
+    return authClient;
+  } catch (error) {
+    console.error('Google API 인증 오류:', error);
+    throw error;
+  }
 }
 
 // Google Sheets API 인스턴스 생성

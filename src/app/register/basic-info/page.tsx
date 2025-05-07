@@ -113,7 +113,7 @@ export default function BasicInfoPage() {
   };
 
   return (
-    <div className="bg-white flex flex-col min-h-screen">
+    <div className="bg-white flex flex-col">
       {/* 타이틀 */}
       <div className="w-full px-5 py-8 bg-white flex flex-col justify-start items-start gap-5 overflow-hidden">
         <div className="self-stretch text-center justify-end text-neutral-800 text-xl font-bold leading-7">
@@ -303,40 +303,6 @@ export default function BasicInfoPage() {
           </button>
         </div>
       </form>
-      
-      {/* 푸터 */}
-      <div className="w-full px-5 py-8 bg-neutral-100 flex flex-col justify-start items-start gap-4 mt-auto">
-        <div className="text-zinc-600 text-xs font-semibold">사단법인 STAMP</div>
-        <div className="flex flex-col justify-start items-start gap-1">
-          <div className="text-zinc-600 text-xs">대표</div>
-          <div className="text-zinc-600 text-xs">개인정보보호책임자</div>
-          <div className="text-zinc-600 text-xs">사업자등록번호</div>
-          <div className="text-zinc-600 text-xs">통신판매업신고</div>
-          <div className="text-zinc-600 text-xs">고객 센터</div>
-          <div className="text-zinc-600 text-xs">서울특별시</div>
-          <div className="inline-flex justify-start items-center gap-3 mt-2">
-            <div className="text-zinc-600 text-xs font-semibold">서비스 소개</div>
-            <div className="w-px h-3 bg-zinc-600" />
-            <div className="text-zinc-600 text-xs font-semibold">서비스이용약관</div>
-            <div className="w-px h-3 bg-zinc-600" />
-            <div className="text-zinc-600 text-xs font-semibold">개인정보처리방침</div>
-          </div>
-        </div>
-        <div className="inline-flex justify-start items-center gap-2 mt-2">
-          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
-            <div className="w-4 h-3.5 bg-neutral-400" />
-          </div>
-          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
-            <div className="w-4 h-2.5 bg-neutral-400" />
-          </div>
-          <div className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
-            <div className="w-3.5 h-3.5 bg-neutral-400" />
-          </div>
-          <button className="px-3 py-2.5 rounded-lg outline outline-1 outline-neutral-200 flex justify-center items-center gap-1 text-zinc-600 text-sm font-semibold">
-            1:1 문의하기
-          </button>
-        </div>
-      </div>
     </div>
   );
 } 

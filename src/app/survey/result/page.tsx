@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ReactElement } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   RadarChart,
@@ -40,6 +40,14 @@ interface ResultData {
     childGender: string;
     parentAgeGroup: string;
     caregiverType: string;
+  };
+}
+
+interface PolarAngleAxisTickProps {
+  x: number;
+  y: number;
+  payload: {
+    value: string;
   };
 }
 
@@ -102,6 +110,41 @@ export default function SurveyResultPage() {
         badge: 'bg-rose-100 text-red-600'
       };
     }
+  };
+
+  const CustomTick = ({ x, y, payload }: PolarAngleAxisTickProps): ReactElement<SVGGElement> => {
+    const lines = payload.value.split('\n');
+    const isPerfect = payload.value.includes('완벽주의');
+    const isParentRole = payload.value.includes('부모역할');
+    const isAttachment = payload.value.includes('애착');
+    const isChild = payload.value.includes('자녀에');
+    const isSocial = payload.value.includes('사회적');
+    
+    return (
+      <g transform={`translate(${x},${y})`}>
+        {/* 하얀색 배경 */}
+        <rect
+          x={isPerfect ? -55 : isAttachment ? -15 : isParentRole ? -35 : -45}
+          y={isParentRole ? -24 : (isChild || isSocial) ? -4 : -14}
+          width={70}
+          height={28}
+          fill="white"
+          opacity={0.9}
+        />
+        {lines.map((line: string, i: number) => (
+          <text
+            key={i}
+            x={isPerfect ? -20 : isAttachment ? 20 : isParentRole ? 0 : -10}
+            y={isParentRole ? (i * 11 * 1.3) - 10 : (isChild || isSocial) ? (i * 11 * 1.3) + 10 : i * 11 * 1.3}
+            textAnchor="middle"
+            fill="#71717a"
+            fontSize={11}
+          >
+            {line}
+          </text>
+        ))}
+      </g>
+    );
   };
 
   return (
@@ -193,41 +236,7 @@ export default function SurveyResultPage() {
                 <PolarAngleAxis 
                   dataKey="category" 
                   tickLine={false}
-                  tick={(props: any) => {
-                    const { x, y, payload } = props;
-                    const lines = payload.value.split('\n');
-                    const isPerfect = payload.value.includes('완벽주의');
-                    const isParentRole = payload.value.includes('부모역할');
-                    const isAttachment = payload.value.includes('애착');
-                    const isChild = payload.value.includes('자녀에');
-                    const isSocial = payload.value.includes('사회적');
-                    
-                    return (
-                      <g transform={`translate(${x},${y})`}>
-                        {/* 하얀색 배경 */}
-                        <rect
-                          x={isPerfect ? -55 : isAttachment ? -15 : isParentRole ? -35 : -45}
-                          y={isParentRole ? -24 : (isChild || isSocial) ? -4 : -14}
-                          width={70}
-                          height={28}
-                          fill="white"
-                          opacity={0.9}
-                        />
-                        {lines.map((line: string, i: number) => (
-                          <text
-                            key={i}
-                            x={isPerfect ? -20 : isAttachment ? 20 : isParentRole ? 0 : -10}
-                            y={isParentRole ? (i * 11 * 1.3) - 10 : (isChild || isSocial) ? (i * 11 * 1.3) + 10 : i * 11 * 1.3}
-                            textAnchor="middle"
-                            fill="#71717a"
-                            fontSize={11}
-                          >
-                            {line}
-                          </text>
-                        ))}
-                      </g>
-                    );
-                  }}
+                  tick={CustomTick}
                 />
                 <PolarRadiusAxis 
                   domain={[0, 5]} 

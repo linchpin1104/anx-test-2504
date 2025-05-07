@@ -36,9 +36,6 @@ export async function POST(request: Request) {
   // 사용자 ID로 전화번호 사용 (고유 식별자)
   const userId = userInfo.phone;
   
-  // 먼저 사용자 문서 참조 가져오기
-  const userRef = firestore.collection('users').doc(userId);
-
   // Load questions
   const qPath = join(process.cwd(), 'content', 'questions.json');
   const qJson = await fs.readFile(qPath, 'utf8');
@@ -48,7 +45,6 @@ export async function POST(request: Request) {
   const rcPath = join(process.cwd(), 'content', 'report-config.json');
   const rcJson = await fs.readFile(rcPath, 'utf8');
   const reportConfig = JSON.parse(rcJson) as ReportConfig;
-  const thresholds = reportConfig.thresholds;
 
   // Group answers by category
   const categoryValues: Record<string, number[]> = {};
@@ -72,100 +68,98 @@ export async function POST(request: Request) {
 
   // Compute category results
   const categoryResults: Record<string, { mean: number; label: string; description: string }> = {};
-  for (const cat in thresholds.categories) {
-    const values = categoryValues[cat] || [];
-    const sum = values.reduce((a, b) => a + b, 0);
-    const mean = values.length ? sum / values.length : 0;
-    const entry = findThreshold(thresholds.categories[cat], mean);
-    categoryResults[cat] = {
+  Object.entries(categoryValues).forEach(([category, values]) => {
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    const threshold = findThreshold(reportConfig.thresholds.categories[category] || [], mean);
+    categoryResults[category] = {
       mean,
-      label: entry?.label || '',
-      description: entry?.description || '',
+      label: threshold?.label || '평가 불가',
+      description: threshold?.description || '결과를 평가할 수 없습니다.'
     };
-  }
+  });
 
-  // Compute global average for the five parenting categories
-  const globalCats: string[] = reportConfig.scales.find((s) => s.categories)?.categories ?? [];
-  const means = globalCats.map((cat) => categoryResults[cat]?.mean || 0);
-  const globalMean = means.reduce((a, b) => a + b, 0) / means.length;
-  const globalEntry = findThreshold(thresholds.globalAverage, globalMean);
+  // Compute global result
+  const globalValues = Object.values(categoryResults)
+    .filter(r => r.label !== '평가 불가')
+    .map(r => r.mean);
+  const globalMean = globalValues.reduce((a, b) => a + b, 0) / globalValues.length;
+  const globalThreshold = findThreshold(reportConfig.thresholds.globalAverage, globalMean);
   const globalResult = {
     mean: globalMean,
-    label: globalEntry?.label || '',
-    description: globalEntry?.description || '',
+    label: globalThreshold?.label || '평가 불가',
+    description: globalThreshold?.description || '결과를 평가할 수 없습니다.'
   };
 
-  // Compute BAI sum and result
+  // Compute BAI result
   const baiValues = categoryValues['BAI 불안척도'] || [];
   const baiSum = baiValues.reduce((a, b) => a + b, 0);
-  const baiEntry = findThreshold(thresholds.categories['BAI 불안척도'], baiSum);
+  const baiThreshold = findThreshold(reportConfig.thresholds.categories['BAI 불안척도'] || [], baiSum);
   const baiResult = {
     sum: baiSum,
-    label: baiEntry?.label || '',
-    description: baiEntry?.description || '',
+    label: baiThreshold?.label || '평가 불가',
+    description: baiThreshold?.description || '결과를 평가할 수 없습니다.'
   };
 
-  let resultId = '';
+  // Check if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  // Generate a unique result ID
+  const resultId = `result_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Firestore에 데이터 저장
   try {
-    // 트랜잭션으로 사용자 정보 업데이트 및 결과 저장
-    await firestore.runTransaction(async (transaction) => {
-      // 1. 사용자 정보 저장/업데이트
-      const userDoc = await transaction.get(userRef);
-      if (!userDoc.exists) {
-        // 새 사용자 생성
-        transaction.set(userRef, {
-          name: userInfo.name,
-          phone: userInfo.phone,
-          childAge: userInfo.childAge,
-          childGender: userInfo.childGender,
-          parentAgeGroup: userInfo.parentAgeGroup,
-          caregiverType: userInfo.caregiverType,
-          region: userInfo.region || '',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      } else {
-        // 기존 사용자 업데이트
-        transaction.update(userRef, {
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          // 추가 필드가 있으면 업데이트
-          ...(userInfo.childAge && { childAge: userInfo.childAge }),
-          ...(userInfo.childGender && { childGender: userInfo.childGender }),
-          ...(userInfo.parentAgeGroup && { parentAgeGroup: userInfo.parentAgeGroup }),
-          ...(userInfo.caregiverType && { caregiverType: userInfo.caregiverType }),
-          ...(userInfo.region && { region: userInfo.region }),
-        });
-      }
-
-      // 2. 검사 결과 저장 (사용자의 results 서브컬렉션)
-      const resultRef = userRef.collection('results').doc();
-      resultId = resultRef.id;
-      
-      transaction.set(resultRef, {
-        answers,
-        categoryResults,
-        globalResult,
-        baiResult,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      // 3. 기존 'responses' 컬렉션에도 호환성을 위해 저장 (선택적)
-      const legacyRef = firestore.collection('responses').doc();
-      transaction.set(legacyRef, {
-        answers,
-        categoryResults,
-        globalResult,
-        baiResult,
-        userInfo,
-        userId,
+    // 개발 환경에서는 Firebase 저장을 건너뛰고 바로 결과 반환
+    if (isDevelopment) {
+      console.log('[DEV] 개발 모드에서 Firebase 저장을 건너뜁니다.');
+      return NextResponse.json({ 
+        success: true,
         resultId,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        categoryResults, 
+        globalResult, 
+        baiResult
       });
-    });
+    }
+
+    // 프로덕션 환경에서는 Firebase에 저장
+    if (firestore && typeof firestore.collection === 'function') {
+      await firestore.runTransaction(async (transaction) => {
+        // 1. 사용자 정보 저장/업데이트
+        const userRef = firestore.collection('users').doc(userId);
+        transaction.set(userRef, {
+          ...userInfo,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // 2. 결과 저장 (새로운 구조)
+        const resultRef = userRef.collection('results').doc(resultId);
+        transaction.set(resultRef, {
+          answers,
+          categoryResults,
+          globalResult,
+          baiResult,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 3. 레거시 구조에도 저장 (호환성 유지)
+        const legacyRef = firestore.collection('responses').doc(resultId);
+        transaction.set(legacyRef, {
+          answers,
+          categoryResults,
+          globalResult,
+          baiResult,
+          userInfo,
+          userId,
+          resultId,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      });
+    } else {
+      console.warn('[Result API] Firestore not initialized or not properly configured');
+      if (!isDevelopment) {
+        throw new Error('데이터베이스 연결에 실패했습니다.');
+      }
+    }
     
-    // 결과 반환 - 결과 ID도 포함
+    // 결과 반환
     return NextResponse.json({ 
       success: true,
       resultId,
@@ -175,7 +169,20 @@ export async function POST(request: Request) {
     });
     
   } catch (error) {
-    console.error('[Result API] Firestore write error:', error);
+    console.error('[Result API] Error:', error);
+    
+    // 개발 환경에서는 에러를 무시하고 결과 반환
+    if (isDevelopment) {
+      console.log('[DEV] 개발 모드에서 에러를 무시하고 결과를 반환합니다.');
+      return NextResponse.json({ 
+        success: true,
+        resultId,
+        categoryResults, 
+        globalResult, 
+        baiResult
+      });
+    }
+    
     return NextResponse.json(
       { success: false, message: '결과 저장 중 오류가 발생했습니다.' },
       { status: 500 }

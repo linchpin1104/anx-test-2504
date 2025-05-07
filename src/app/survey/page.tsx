@@ -299,7 +299,7 @@ export default function SurveyPage() {
         {/* Title container */}
         <div className="w-full px-5 pt-8 pb-5 flex flex-col justify-start items-start gap-3">
           <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-loose">양육불안도 검사 (총 47문항)</div>
-          <div className="self-stretch justify-start text-zinc-600 text-sm md:text-base font-normal font-['Pretendard_Variable'] leading-snug">양육불안도 검사는 부모의 양육과정에서 <br/>경험하는 불안 수준을 측정하는 검사입니다</div>
+          <div className="self-stretch justify-start text-zinc-600 text-sm md:text-base font-normal font-['Pretendard_Variable'] leading-snug">양육불안검사는 부모가 양육과정에서 경험하는 불안수준을 측정하는 검사입니다. 불안수준을 확인하고 나에게 필요한 가이드를 받아보세요!</div>
         </div>
 
         {/* Alert box */}
@@ -309,9 +309,9 @@ export default function SurveyPage() {
               <div className="size-4 relative">
                 <div className="size-3.5 left-[1.33px] top-[1.33px] absolute bg-amber-500" />
               </div>
-              <div className="justify-center text-amber-500 text-xs font-semibold font-['Pretendard_Variable'] leading-3">안내</div>
+              <div className="justify-center text-amber-500 text-xs font-semibold font-['Pretendard_Variable'] leading-3">주의사항</div>
             </div>
-            <div className="self-stretch justify-center text-zinc-600 text-xs font-normal font-['Pretendard_Variable'] leading-tight">모든 질문에 응답해주세요. 제출 후에는 수정이 불가능합니다.</div>
+            <div className="self-stretch justify-center text-zinc-600 text-xs font-normal font-['Pretendard_Variable'] leading-tight">모든 질문에 빠짐없이 응답해주세요. 제출 후에는 수정이 어렵습니다.</div>
           </div>
         </div>
 
@@ -331,7 +331,7 @@ export default function SurveyPage() {
           <div className="w-full px-5 pt-5 pb-4 flex-1 flex flex-col justify-start items-start gap-8 overflow-y-auto">
             {questions.map((q, idx) => (
               <div key={q.id} className="self-stretch flex flex-col justify-start items-start gap-3 w-full">
-                {idx === 27 && (
+                {idx === 26 && (
                   <div className="self-stretch px-4 py-4 bg-sky-50 rounded-lg outline outline-1 outline-offset-[-1px] outline-sky-100 flex flex-col justify-start items-start gap-2 mb-6">
                     <div className="self-stretch text-sky-800 text-sm font-medium font-['Pretendard_Variable'] leading-normal">
                       다음의 문항을 읽으시고 현재 상태에 해당하는 것을 0~3점으로 표시해주세요. 지난 1주일간 겪었던 일반적인 불안 증상을 떠올리며 편한 마음으로 답변하시면 됩니다.
