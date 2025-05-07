@@ -17,12 +17,19 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // 전화번호 형식 통일 (- 제거)
+    const formattedPhone = phone.replace(/-/g, '');
     
     // 인증 코드 확인
-    const verification = await getVerificationCode(phone);
+    const verification = await getVerificationCode(formattedPhone);
     
     // 인증 코드가 없거나 만료된 경우
     if (!verification) {
+      console.log('인증번호 없음 또는 만료:', {
+        phone: formattedPhone,
+        receivedCode: code
+      });
       return NextResponse.json({ 
         success: false, 
         verified: false, 
@@ -35,8 +42,13 @@ export async function POST(request: Request) {
     
     // 만료 확인
     if (now > verification.expiresAt) {
+      console.log('인증번호 만료:', {
+        phone: formattedPhone,
+        receivedCode: code,
+        expiresAt: verification.expiresAt
+      });
       // 만료된 코드 삭제
-      await deleteVerificationCode(phone);
+      await deleteVerificationCode(formattedPhone);
       return NextResponse.json({ 
         success: false, 
         verified: false, 
@@ -47,8 +59,10 @@ export async function POST(request: Request) {
     // 코드 일치 여부 확인
     if (verification.code !== code) {
       console.log('인증번호 불일치:', {
-        received: code,
-        expected: verification.code
+        phone: formattedPhone,
+        receivedCode: code,
+        expectedCode: verification.code,
+        expiresAt: verification.expiresAt
       });
       return NextResponse.json({ 
         success: false, 
@@ -58,7 +72,7 @@ export async function POST(request: Request) {
     }
     
     // 검증 성공 - 사용된 인증 코드 삭제
-    await deleteVerificationCode(phone);
+    await deleteVerificationCode(formattedPhone);
     
     // 성공 응답 반환
     return NextResponse.json({
