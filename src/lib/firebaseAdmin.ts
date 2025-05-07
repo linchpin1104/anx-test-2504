@@ -18,10 +18,24 @@ try {
       });
     } else {
       try {
-        // private key comes in as a string with escaped newlines, convert them to actual newlines
-        const privateKey = privateKeyRaw.includes('\\n') 
-          ? privateKeyRaw.replace(/\\n/g, '\n')
-          : privateKeyRaw;
+        // private key 처리 개선
+        let privateKey = privateKeyRaw;
+        
+        // 따옴표 제거
+        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+          privateKey = privateKey.slice(1, -1);
+        }
+        
+        // 줄바꿈 문자 처리
+        if (privateKey.includes('\\n')) {
+          privateKey = privateKey.replace(/\\n/g, '\n');
+        }
+        
+        // private key 형식 검증
+        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----') || 
+            !privateKey.includes('-----END PRIVATE KEY-----')) {
+          throw new Error('Invalid private key format');
+        }
 
         admin.initializeApp({
           credential: admin.credential.cert({
