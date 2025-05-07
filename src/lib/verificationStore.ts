@@ -21,8 +21,8 @@ export async function setVerificationCode(phone: string, code: string, expiresAt
   try {
     const data = {
       code,
-      expiresAt: Timestamp.fromDate(expiresAt),
-      createdAt: Timestamp.fromDate(new Date()),
+      expiresAt: expiresAt.toISOString(),
+      createdAt: new Date().toISOString(),
       attempts: 0
     };
     
@@ -71,11 +71,7 @@ export async function getVerificationCode(phone: string): Promise<VerificationDa
       return undefined;
     }
 
-    // 타임스탬프를 Date 객체로 변환 (UTC 기준)
-    const expiresAt = data.expiresAt instanceof Timestamp 
-      ? new Date(data.expiresAt.toDate().getTime())
-      : new Date(data.expiresAt.seconds * 1000);
-
+    const expiresAt = new Date(data.expiresAt);
     const verificationData = {
       code: data.code,
       expiresAt,
