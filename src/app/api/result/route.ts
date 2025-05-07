@@ -24,19 +24,20 @@ interface ReportConfig {
 export async function POST(request: Request) {
   // Parse request body
   const { answers, userInfo } = await request.json();
-
-  // Attempt to save raw answers to Firestore (skip if misconfigured)
-  let rawDocRef!: admin.firestore.DocumentReference<admin.firestore.DocumentData>;
-  try {
-    rawDocRef = firestore.collection('responses').doc();
-    await rawDocRef.set({ 
-      answers, 
-      userInfo,
-      createdAt: admin.firestore.FieldValue.serverTimestamp() 
-    });
-  } catch (e) {
-    console.warn('[Result API] Firestore write skipped:', e);
+  
+  // 필수 사용자 정보 확인
+  if (!userInfo || !userInfo.phone) {
+    return NextResponse.json(
+      { success: false, message: '사용자 정보가 유효하지 않습니다.' },
+      { status: 400 }
+    );
   }
+
+  // 사용자 ID로 전화번호 사용 (고유 식별자)
+  const userId = userInfo.phone;
+  
+  // 먼저 사용자 문서 참조 가져오기
+  const userRef = firestore.collection('users').doc(userId);
 
   // Load questions
   const qPath = join(process.cwd(), 'content', 'questions.json');
@@ -104,19 +105,80 @@ export async function POST(request: Request) {
     description: baiEntry?.description || '',
   };
 
-  // Attempt to save computed results (skip if write failed)
-  if (rawDocRef) {
-    try {
-      await rawDocRef.update({ 
-        categoryResults, 
-        globalResult, 
-        baiResult,
-        userInfo
-      });
-    } catch (e) {
-      console.warn('[Result API] Firestore update skipped:', e);
-    }
-  }
+  let resultId = '';
 
-  return NextResponse.json({ categoryResults, globalResult, baiResult });
+  // Firestore에 데이터 저장
+  try {
+    // 트랜잭션으로 사용자 정보 업데이트 및 결과 저장
+    await firestore.runTransaction(async (transaction) => {
+      // 1. 사용자 정보 저장/업데이트
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) {
+        // 새 사용자 생성
+        transaction.set(userRef, {
+          name: userInfo.name,
+          phone: userInfo.phone,
+          childAge: userInfo.childAge,
+          childGender: userInfo.childGender,
+          parentAgeGroup: userInfo.parentAgeGroup,
+          caregiverType: userInfo.caregiverType,
+          region: userInfo.region || '',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } else {
+        // 기존 사용자 업데이트
+        transaction.update(userRef, {
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          // 추가 필드가 있으면 업데이트
+          ...(userInfo.childAge && { childAge: userInfo.childAge }),
+          ...(userInfo.childGender && { childGender: userInfo.childGender }),
+          ...(userInfo.parentAgeGroup && { parentAgeGroup: userInfo.parentAgeGroup }),
+          ...(userInfo.caregiverType && { caregiverType: userInfo.caregiverType }),
+          ...(userInfo.region && { region: userInfo.region }),
+        });
+      }
+
+      // 2. 검사 결과 저장 (사용자의 results 서브컬렉션)
+      const resultRef = userRef.collection('results').doc();
+      resultId = resultRef.id;
+      
+      transaction.set(resultRef, {
+        answers,
+        categoryResults,
+        globalResult,
+        baiResult,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // 3. 기존 'responses' 컬렉션에도 호환성을 위해 저장 (선택적)
+      const legacyRef = firestore.collection('responses').doc();
+      transaction.set(legacyRef, {
+        answers,
+        categoryResults,
+        globalResult,
+        baiResult,
+        userInfo,
+        userId,
+        resultId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    
+    // 결과 반환 - 결과 ID도 포함
+    return NextResponse.json({ 
+      success: true,
+      resultId,
+      categoryResults, 
+      globalResult, 
+      baiResult
+    });
+    
+  } catch (error) {
+    console.error('[Result API] Firestore write error:', error);
+    return NextResponse.json(
+      { success: false, message: '결과 저장 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
 } 

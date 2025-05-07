@@ -24,6 +24,8 @@ interface BaiResult {
 }
 
 interface ResultData {
+  success?: boolean;
+  resultId?: string;
   name: string;
   peerReview: number[];
   selfReview: number[];
@@ -116,9 +118,11 @@ export default function SurveyResultPage() {
             <div className="size-4 relative">
               <div className="size-3.5 left-[1.33px] top-[1.33px] absolute bg-amber-500" />
             </div>
-            <div className="justify-center text-amber-500 text-sm font-semibold font-['Pretendard_Variable'] leading-6" style={{ fontSize: '13px' }}>안내</div>
+            <div className="justify-center text-amber-500 text-sm font-semibold font-['Pretendard_Variable'] leading-6" style={{ fontSize: '13px' }}>참고해주세요</div>
           </div>
-          <div className="self-stretch justify-center text-zinc-600 text-sm font-normal font-['Pretendard_Variable'] leading-6" style={{ fontSize: '13px' }}>이 결과는 검사 당시의 상태를 기반으로 합니다. 점수는 참고용이며 정확한 판단은 전문가와 상담하세요.</div>
+          <div className="self-stretch justify-center text-zinc-600 text-sm font-normal font-['Pretendard_Variable'] leading-6" style={{ fontSize: '13px' }}>
+            아래 결과는 해당 검사에 체크하신 내용을 기반으로 심리전문가들이 분석하여 제공합니다. 보다 자세한 검사 및 상담은 전문센터를 통해 확인하시길 권해드립니다.
+          </div>
         </div>
       </div>
 
@@ -163,10 +167,24 @@ export default function SurveyResultPage() {
               <RadarChart 
                 data={Object.entries(categoryResults)
                   .filter(([cat]) => cat !== 'BAI 불안척도')
-                  .map(([cat, { mean }]) => ({ 
-                    category: cat, 
-                    value: mean 
-                  }))}
+                  .map(([cat, { mean }]) => {
+                    let formattedCategory = cat;
+                    if (cat === '부모역할 효능감으로 인한 불안') {
+                      formattedCategory = '부모역할\n효능감으로 인한 불안';
+                    } else if (cat === '사회적 지지에 대한 염려') {
+                      formattedCategory = '사회적 지지에\n대한 염려';
+                    } else if (cat === '자녀에 대한 염려') {
+                      formattedCategory = '자녀에\n대한 염려';
+                    } else if (cat === '자녀와의 애착에 대한 불안') {
+                      formattedCategory = '자녀와의 애착에\n대한 불안';
+                    } else if (cat === '완벽주의로 인한 불안') {
+                      formattedCategory = '완벽주의로\n인한 불안';
+                    }
+                    return { 
+                      category: formattedCategory, 
+                      value: mean 
+                    };
+                  })}
                 cx="50%" 
                 cy="50%" 
                 outerRadius="80%"
@@ -174,8 +192,42 @@ export default function SurveyResultPage() {
                 <PolarGrid gridType="polygon" />
                 <PolarAngleAxis 
                   dataKey="category" 
-                  tick={{ fill: '#71717a', fontSize: 13 }}
                   tickLine={false}
+                  tick={(props: any) => {
+                    const { x, y, payload } = props;
+                    const lines = payload.value.split('\n');
+                    const isPerfect = payload.value.includes('완벽주의');
+                    const isParentRole = payload.value.includes('부모역할');
+                    const isAttachment = payload.value.includes('애착');
+                    const isChild = payload.value.includes('자녀에');
+                    const isSocial = payload.value.includes('사회적');
+                    
+                    return (
+                      <g transform={`translate(${x},${y})`}>
+                        {/* 하얀색 배경 */}
+                        <rect
+                          x={isPerfect ? -55 : isAttachment ? -15 : isParentRole ? -35 : -45}
+                          y={isParentRole ? -24 : (isChild || isSocial) ? -4 : -14}
+                          width={70}
+                          height={28}
+                          fill="white"
+                          opacity={0.9}
+                        />
+                        {lines.map((line: string, i: number) => (
+                          <text
+                            key={i}
+                            x={isPerfect ? -20 : isAttachment ? 20 : isParentRole ? 0 : -10}
+                            y={isParentRole ? (i * 11 * 1.3) - 10 : (isChild || isSocial) ? (i * 11 * 1.3) + 10 : i * 11 * 1.3}
+                            textAnchor="middle"
+                            fill="#71717a"
+                            fontSize={11}
+                          >
+                            {line}
+                          </text>
+                        ))}
+                      </g>
+                    );
+                  }}
                 />
                 <PolarRadiusAxis 
                   domain={[0, 5]} 
@@ -214,6 +266,31 @@ export default function SurveyResultPage() {
                   {category}
                 </div>
               </div>
+              {category === '부모역할 효능감으로 인한 불안' && (
+                <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6 mt-2">
+                  부모가 자신의 양육 능력을 스스로 어떻게 느끼는지에 대한 불안을 의미합니다
+                </div>
+              )}
+              {category === '자녀와의 애착에 대한 불안' && (
+                <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6 mt-2">
+                  부모가 자녀와 정서적으로 친밀한 관계를 유지하고 싶은 마음이 강하지만, 아이와 멀어질까 봐 드는 불안을 의미합니다
+                </div>
+              )}
+              {category === '자녀에 대한 염려' && (
+                <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6 mt-2">
+                  자녀에게 작은 문제가 생겨도 크게 걱정하고 불안해지는 것을 의미합니다
+                </div>
+              )}
+              {category === '사회적 지지에 대한 염려' && (
+                <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6 mt-2">
+                  부모가 아이를 키우는 과정에서 주변 사람들부터 충분한 도움과 응원을 받지 못한다고 느끼며 외로움과 부담감을 크게 느끼는 상태를 의미합니다
+                </div>
+              )}
+              {category === '완벽주의로 인한 불안' && (
+                <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6 mt-2">
+                  부모가 스스로 완벽한 부모여야 한다는 압박감을 느끼면서, 작은 실수에도 크게 불안해하고 자신을 탓하는 마음을 의미합니다
+                </div>
+              )}
             </div>
             
             <div className="w-full flex flex-col justify-center items-center gap-2.5">
@@ -223,10 +300,7 @@ export default function SurveyResultPage() {
                     <div className="w-full inline-flex flex-col justify-center items-start">
                       <div className="w-full flex flex-col justify-center items-start gap-2">
                         <div className="w-full justify-start text-zinc-600 text-base font-bold font-['Pretendard_Variable'] leading-6">
-                          {category}지수 : <span className={getStatusColor(label).text}>{label}</span>
-                        </div>
-                        <div className="w-full justify-start text-zinc-600 text-base font-normal font-['Pretendard_Variable'] leading-6 mt-4">
-                          나의점수 : {mean.toFixed(1)} 점
+                          {category}지수 : <span className={getStatusColor(label).text}>{label}</span> ({mean.toFixed(1)}점)
                         </div>
                       </div>
                     </div>
@@ -274,7 +348,7 @@ export default function SurveyResultPage() {
       {/* Action buttons */}
       <div className="w-full bg-white flex flex-col justify-start items-center mt-auto">
         <div className="self-stretch h-px bg-zinc-100" />
-        <div className="self-stretch px-5 py-4 inline-flex justify-between items-start gap-1">
+        <div className="self-stretch px-5 py-4 inline-flex justify-between items-start gap-3">
           <button
             onClick={() => {
               localStorage.removeItem('surveyResult');
@@ -287,11 +361,64 @@ export default function SurveyResultPage() {
             </div>
           </button>
           <button
-            onClick={() => window.open('https://www.thenile.kr/pacer', '_blank')}
-            className="flex-1 px-4 py-4 bg-sky-500 rounded-2xl flex justify-center items-center gap-2"
+            onClick={() => {
+              alert('기능 준비중입니다.');
+            }}
+            className="flex-1 px-4 py-4 bg-white border border-sky-500 rounded-2xl flex justify-center items-center gap-2"
           >
-            <div className="text-center justify-center text-white text-base font-semibold font-['Pretendard_Variable'] leading-6">
-              후원하기
+            <div className="text-center justify-center text-sky-500 text-base font-semibold font-['Pretendard_Variable'] leading-6">
+              결과공유
+            </div>
+          </button>
+        </div>
+        
+        {/* 이전 검사 결과 조회 버튼 - 임시로 숨김 처리 */}
+        {/* <div className="self-stretch px-5 pb-4">
+          <button 
+            onClick={() => {
+              const historyJson = localStorage.getItem('surveyResultHistory') || '[]';
+              const history = JSON.parse(historyJson) as string[];
+              
+              if (history.length <= 1) {
+                alert('이전 검사 결과가 없습니다.');
+                return;
+              }
+              
+              const currentResultId = resultData?.resultId;
+              const otherResults = history.filter(id => id !== currentResultId);
+              
+              if (otherResults.length === 0) {
+                alert('이전 검사 결과가 없습니다.');
+                return;
+              }
+              
+              const selectedResult = window.confirm(
+                '이전 검사 결과를 조회하시겠습니까?\n' +
+                '(지금은 간단한 메시지로 구현되어 있습니다. 추후 더 좋은 UI로 개선될 예정입니다.)'
+              );
+              
+              if (selectedResult) {
+                alert('기능 준비중입니다. 향후 업데이트에서 제공될 예정입니다.');
+              }
+            }}
+            className="w-full px-4 py-3 bg-white border border-sky-100 rounded-2xl flex justify-center items-center gap-2 text-sky-500"
+          >
+            <div className="text-center justify-center text-sky-500 text-sm font-semibold font-['Pretendard_Variable'] leading-6">
+              이전 검사 결과 보기
+            </div>
+          </button>
+        </div> */}
+        
+        {/* 후원하기 버튼 */}
+        <div className="self-stretch px-5 pb-6">
+          <button 
+            onClick={() => {
+              window.open('https://www.thenile.kr', '_blank');
+            }}
+            className="w-full px-4 py-3 bg-sky-500 rounded-2xl flex justify-center items-center gap-2"
+          >
+            <div className="text-center justify-center text-white text-base font-bold font-['Pretendard_Variable'] leading-6">
+              더나일 알아보기
             </div>
           </button>
         </div>

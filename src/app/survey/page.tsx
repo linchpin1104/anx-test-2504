@@ -32,9 +32,19 @@ interface BaiResult {
 }
 
 interface ResultData {
+  success?: boolean;
+  resultId?: string;
   categoryResults: Record<string, CategoryResult>;
   globalResult: CategoryResult;
   baiResult: BaiResult;
+  userInfo?: {
+    name: string;
+    phone: string;
+    childAge: string;
+    childGender: string;
+    parentAgeGroup: string;
+    caregiverType: string;
+  };
 }
 
 type FormValues = Record<string, string>;
@@ -141,22 +151,49 @@ export default function SurveyPage() {
         throw await handleApiError(res);
       }
       
-      const json: ResultData = await res.json();
+      const json = await res.json();
+      
+      if (!json.success) {
+        throw { 
+          type: ErrorType.SERVER, 
+          message: json.message || '결과 처리 중 오류가 발생했습니다.' 
+        };
+      }
       
       // 결과 저장 및 페이지 이동
       if (typeof window !== 'undefined') {
-        // 사용자 정보도 결과에 포함하여 저장
+        // 사용자 정보와 결과 ID를 포함하여 저장
         const resultWithUserInfo = {
           ...json,
           userInfo: userInfo
         };
         
+        // 현재 결과 저장
         const saved = safeSetItem('surveyResult', JSON.stringify(resultWithUserInfo));
         if (!saved) {
           throw { 
             type: ErrorType.STORAGE, 
             message: '결과를 저장하는데 실패했습니다. 브라우저 설정을 확인해주세요.' 
           };
+        }
+        
+        // 결과 이력 저장하기
+        try {
+          // 기존 이력 불러오기
+          const historyJson = localStorage.getItem('surveyResultHistory') || '[]';
+          const history = JSON.parse(historyJson) as string[];
+          
+          // 새 결과 ID 추가
+          if (json.resultId) {
+            history.unshift(json.resultId); // 최신 결과를 맨 앞에 추가
+            
+            // 중복 제거 및 최대 10개만 유지
+            const uniqueHistory = [...new Set(history)].slice(0, 10);
+            localStorage.setItem('surveyResultHistory', JSON.stringify(uniqueHistory));
+          }
+        } catch (historyError) {
+          console.error('결과 이력 저장 오류:', historyError);
+          // 이력 저장 실패는 치명적이지 않으므로 진행
         }
       }
       
