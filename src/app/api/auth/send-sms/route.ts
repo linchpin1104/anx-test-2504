@@ -15,11 +15,24 @@ interface Message {
 
 export async function POST(request: Request) {
   try {
-    // 요청 본문에서 전화번호 추출
-    const { phoneNumber } = await request.json();
+    // 요청 본문 파싱
+    let body;
+    try {
+      body = await request.json();
+      console.log('요청 본문:', body);
+    } catch (parseError) {
+      console.error('요청 본문 파싱 오류:', parseError);
+      return NextResponse.json(
+        { success: false, message: '잘못된 요청 형식입니다.' },
+        { status: 400 }
+      );
+    }
+
+    const { phoneNumber } = body;
     
     // 필수 값 확인
     if (!phoneNumber) {
+      console.error('전화번호 누락:', body);
       return NextResponse.json(
         { success: false, message: '전화번호가 필요합니다.' },
         { status: 400 }
@@ -36,6 +49,7 @@ export async function POST(request: Request) {
 
     // 전화번호 유효성 검사
     if (!/^01[0-9]{8,9}$/.test(normalizedPhone)) {
+      console.error('유효하지 않은 전화번호:', normalizedPhone);
       return NextResponse.json(
         { success: false, message: '유효하지 않은 전화번호입니다.' },
         { status: 400 }
@@ -51,7 +65,8 @@ export async function POST(request: Request) {
       console.error('SMS 서비스 설정 누락:', {
         hasApiKey: !!apiKey,
         hasApiSecret: !!apiSecret,
-        hasSenderNumber: !!senderNumber
+        hasSenderNumber: !!senderNumber,
+        env: process.env.NODE_ENV
       });
       return NextResponse.json(
         { success: false, message: 'SMS 서비스 설정이 누락되었습니다.' },
@@ -67,9 +82,22 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString()
     });
 
-    // 인증 코드 저장 (3분 후 만료)
-    const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
-    await setVerificationCode(normalizedPhone, code, expiresAt);
+    try {
+      // 인증 코드 저장 (3분 후 만료)
+      const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
+      await setVerificationCode(normalizedPhone, code, expiresAt);
+      console.log('인증번호 저장 완료:', {
+        phone: normalizedPhone,
+        code,
+        expiresAt: expiresAt.toISOString()
+      });
+    } catch (storeError) {
+      console.error('인증번호 저장 오류:', storeError);
+      return NextResponse.json(
+        { success: false, message: '인증번호 저장 중 오류가 발생했습니다.' },
+        { status: 500 }
+      );
+    }
 
     // SMS 발송
     const message: Message = {
@@ -81,8 +109,9 @@ export async function POST(request: Request) {
     console.log('SMS 발송 시도:', {
       phone: normalizedPhone,
       code,
-      expiresAt: expiresAt.toISOString(),
-      timestamp: new Date().toISOString()
+      expiresAt: new Date(Date.now() + 3 * 60 * 1000).toISOString(),
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV
     });
 
     // 개발 환경에서는 실제 SMS 발송을 건너뛰고 성공 응답
@@ -95,35 +124,43 @@ export async function POST(request: Request) {
       });
     }
 
-    // 프로덕션 환경에서는 실제 SMS 발송
-    const response = await fetch('https://api.solapi.com/messages/v4/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(7)}, signature=${apiSecret}`
-      },
-      body: JSON.stringify({ message })
-    });
-
-    const result = await response.json();
-    console.log('SMS 발송 결과:', {
-      phone: normalizedPhone,
-      code,
-      result,
-      timestamp: new Date().toISOString()
-    });
-
-    if (result.status === 'success') {
-      return NextResponse.json({
-        success: true,
-        message: '인증번호가 발송되었습니다.'
+    try {
+      // 프로덕션 환경에서는 실제 SMS 발송
+      const response = await fetch('https://api.solapi.com/messages/v4/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(7)}, signature=${apiSecret}`
+        },
+        body: JSON.stringify({ message })
       });
-    } else {
-      throw new Error(result.errorMessage || 'SMS 발송에 실패했습니다.');
+
+      const result = await response.json();
+      console.log('SMS 발송 결과:', {
+        phone: normalizedPhone,
+        code,
+        result,
+        timestamp: new Date().toISOString()
+      });
+
+      if (result.status === 'success') {
+        return NextResponse.json({
+          success: true,
+          message: '인증번호가 발송되었습니다.'
+        });
+      } else {
+        throw new Error(result.errorMessage || 'SMS 발송에 실패했습니다.');
+      }
+    } catch (smsError) {
+      console.error('SMS 발송 오류:', smsError);
+      return NextResponse.json(
+        { success: false, message: 'SMS 발송 중 오류가 발생했습니다.' },
+        { status: 500 }
+      );
     }
 
   } catch (error) {
-    console.error('SMS 발송 오류:', error);
+    console.error('예상치 못한 오류:', error);
     return NextResponse.json(
       { success: false, message: '인증번호 발송 중 오류가 발생했습니다.' },
       { status: 500 }
