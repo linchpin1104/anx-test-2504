@@ -10,10 +10,9 @@ function normalizePhoneNumber(phone: string): string {
 // HMAC-SHA256 서명 생성
 function generateSignature(apiKey: string, apiSecret: string, date: string, salt: string): string {
   const message = `date=${date}\nsalt=${salt}\napiKey=${apiKey}`;
-  return crypto
-    .createHmac('sha256', apiSecret)
-    .update(message)
-    .digest('base64');
+  const hmac = crypto.createHmac('sha256', apiSecret);
+  hmac.update(message);
+  return hmac.digest('base64');
 }
 
 // SMS 메시지 타입 정의
@@ -144,20 +143,26 @@ export async function POST(request: Request) {
         message: smsMessage
       };
 
+      const authHeader = `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`;
+      
       console.log('SMS API 요청 준비:', {
         url: 'https://api.solapi.com/messages/v4/send',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`
+          'Authorization': authHeader
         },
-        body: requestBody
+        body: requestBody,
+        signature: {
+          message: `date=${date}\nsalt=${salt}\napiKey=${apiKey}`,
+          signature
+        }
       });
 
       const response = await fetch('https://api.solapi.com/messages/v4/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`
+          'Authorization': authHeader
         },
         body: JSON.stringify(requestBody)
       });
