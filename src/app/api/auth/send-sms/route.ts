@@ -2,9 +2,16 @@ import { NextResponse } from 'next/server';
 import { setVerificationCode } from '@/lib/verificationStore';
 import crypto from 'crypto';
 
-// 전화번호 형식 정규화
+// 전화번호 형식 정규화 - 이제 +로 시작하는 국제번호 형식 유지
 function normalizePhoneNumber(phone: string): string {
-  return phone.replace(/[^0-9]/g, '');
+  if (phone.startsWith('+')) {
+    // 국제 전화번호 형식 (+로 시작)
+    // + 이후의 숫자만 유지, 다른 특수문자 제거
+    return '+' + phone.substring(1).replace(/[^0-9]/g, '');
+  } else {
+    // 국내 전화번호 형식이거나 이미 국가코드가 없는 경우
+    return phone.replace(/[^0-9]/g, '');
+  }
 }
 
 /**
@@ -62,8 +69,9 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString()
     });
 
-    // 전화번호 유효성 검사
-    if (!/^01[0-9]{8,9}$/.test(normalizedPhone)) {
+    // 전화번호 유효성 검사 - 이제 국제번호 지원
+    // E.164 형식: +국가코드숫자들
+    if (!/^\+?[1-9]\d{1,14}$/.test(normalizedPhone)) {
       console.error('유효하지 않은 전화번호:', normalizedPhone);
       return NextResponse.json(
         { success: false, message: '유효하지 않은 전화번호입니다.' },

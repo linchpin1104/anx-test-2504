@@ -54,6 +54,7 @@ interface PolarAngleAxisTickProps {
 export default function SurveyResultPage() {
   const router = useRouter();
   const [resultData, setResultData] = useState<ResultData | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -370,13 +371,45 @@ export default function SurveyResultPage() {
             </div>
           </button>
           <button
-            onClick={() => {
-              alert('기능 준비중입니다.');
+            onClick={async () => {
+              if (isSharing) return;
+              
+              setIsSharing(true);
+              try {
+                // 결과 데이터를 API로 전송
+                const response = await fetch('/api/share', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(resultData),
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                  throw new Error(data.message || '공유 링크 생성에 실패했습니다.');
+                }
+                
+                // 공유 URL 생성
+                const shareUrl = `${window.location.origin}${data.shareUrl}`;
+                
+                // 클립보드에 복사
+                await navigator.clipboard.writeText(shareUrl);
+                
+                alert('링크가 클립보드에 복사되었습니다.\n이 링크를 공유하여 검사 결과를 다른 사람들과 공유할 수 있습니다.');
+              } catch (error) {
+                console.error('결과 공유 중 오류 발생:', error);
+                alert('결과 공유 중 오류가 발생했습니다. 다시 시도해주세요.');
+              } finally {
+                setIsSharing(false);
+              }
             }}
-            className="flex-1 px-4 py-4 bg-white border border-sky-500 rounded-2xl flex justify-center items-center gap-2"
+            disabled={isSharing}
+            className={`flex-1 px-4 py-4 ${isSharing ? 'bg-gray-100 border-gray-300' : 'bg-white border-sky-500'} border rounded-2xl flex justify-center items-center gap-2`}
           >
-            <div className="text-center justify-center text-sky-500 text-base font-semibold font-['Pretendard_Variable'] leading-6">
-              결과공유
+            <div className={`text-center justify-center ${isSharing ? 'text-gray-400' : 'text-sky-500'} text-base font-semibold font-['Pretendard_Variable'] leading-6`}>
+              {isSharing ? '처리중...' : '결과공유'}
             </div>
           </button>
         </div>
@@ -422,7 +455,7 @@ export default function SurveyResultPage() {
         <div className="self-stretch px-5 pb-6">
           <button 
             onClick={() => {
-              window.open('https://www.thenile.kr', '_blank');
+              window.open('https://www.thenile.kr/pacer', '_blank');
             }}
             className="w-full px-4 py-3 bg-sky-500 rounded-2xl flex justify-center items-center gap-2"
           >

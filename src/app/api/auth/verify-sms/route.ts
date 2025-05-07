@@ -5,9 +5,16 @@ import { getVerificationCode, deleteVerificationCode, incrementAttempts } from '
 // 이 구현은 서버 재시작 시 코드가 초기화되므로 실제로는 공유 저장소(Redis 등)를 사용해야 함
 // 이 예시에서는 API 경로가 다른 인스턴스에서 실행될 수 있으므로 외부에서 저장소를 임포트하는 것이 좋음
 
-// 전화번호 형식 정규화
+// 전화번호 형식 정규화 - 이제 +로 시작하는 국제번호 형식 유지
 function normalizePhoneNumber(phone: string): string {
-  return phone.replace(/[^0-9]/g, '');
+  if (phone.startsWith('+')) {
+    // 국제 전화번호 형식 (+로 시작)
+    // + 이후의 숫자만 유지, 다른 특수문자 제거
+    return '+' + phone.substring(1).replace(/[^0-9]/g, '');
+  } else {
+    // 국내 전화번호 형식이거나 이미 국가코드가 없는 경우
+    return phone.replace(/[^0-9]/g, '');
+  }
 }
 
 export async function POST(request: Request) {

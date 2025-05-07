@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 interface FormValues {
   name: string;
+  countryCode: string;
   phone: string;
   code: string;
 }
@@ -15,8 +16,26 @@ function normalizePhoneNumber(phone: string): string {
   return phone.replace(/[^0-9]/g, '');
 }
 
+// 주요 국가 코드 리스트
+const countryCodes = [
+  { code: '+82', country: '🇰🇷 한국' },
+  { code: '+1', country: '🇺🇸 미국/캐나다' },
+  { code: '+81', country: '🇯🇵 일본' },
+  { code: '+86', country: '🇨🇳 중국' },
+  { code: '+44', country: '🇬🇧 영국' },
+  { code: '+61', country: '🇦🇺 호주' },
+  { code: '+33', country: '🇫🇷 프랑스' },
+  { code: '+49', country: '🇩🇪 독일' },
+  { code: '+65', country: '🇸🇬 싱가포르' },
+  { code: '+91', country: '🇮🇳 인도' },
+];
+
 export default function RegisterPage() {
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>();
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormValues>({
+    defaultValues: {
+      countryCode: '+82' // 기본값으로 한국 국가코드 설정
+    }
+  });
   const router = useRouter();
   const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -25,6 +44,9 @@ export default function RegisterPage() {
   const [verifyError, setVerifyError] = useState('');
   const [devCode, setDevCode] = useState<string | null>(null);
 
+  // 현재 선택된 국가코드 감시
+  const selectedCountryCode = watch('countryCode');
+
   const onSendCode = async (data: FormValues) => {
     setSending(true);
     setSendError('');
@@ -32,9 +54,14 @@ export default function RegisterPage() {
     try {
       // 전화번호 정규화
       const normalizedPhone = normalizePhoneNumber(data.phone);
+      // 국가코드와 전화번호 결합
+      const fullPhoneNumber = `${data.countryCode}${normalizedPhone}`;
+      
       console.log('인증번호 요청:', { 
+        countryCode: data.countryCode,
         original: data.phone, 
         normalized: normalizedPhone,
+        fullPhoneNumber,
         timestamp: new Date().toISOString()
       });
 
@@ -42,7 +69,7 @@ export default function RegisterPage() {
       const smsRes = await fetch('/api/auth/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: normalizedPhone }),
+        body: JSON.stringify({ phoneNumber: fullPhoneNumber }),
       });
       
       // 응답 파싱 시도
@@ -72,7 +99,7 @@ export default function RegisterPage() {
       // 로컬 스토리지에 이름과 전화번호 저장 (다음 단계를 위해)
       if (typeof window !== 'undefined') {
         localStorage.setItem('registerName', data.name);
-        localStorage.setItem('registerPhone', normalizedPhone);
+        localStorage.setItem('registerPhone', fullPhoneNumber);
       }
       
       setCodeSent(true);
@@ -91,9 +118,14 @@ export default function RegisterPage() {
     try {
       // 전화번호 정규화
       const normalizedPhone = normalizePhoneNumber(data.phone);
+      // 국가코드와 전화번호 결합
+      const fullPhoneNumber = `${data.countryCode}${normalizedPhone}`;
+      
       console.log('인증번호 확인:', { 
+        countryCode: data.countryCode,
         original: data.phone, 
         normalized: normalizedPhone,
+        fullPhoneNumber,
         code: data.code,
         timestamp: new Date().toISOString()
       });
@@ -102,7 +134,7 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          phone: normalizedPhone, 
+          phone: fullPhoneNumber, 
           code: data.code 
         }),
       });
@@ -160,7 +192,7 @@ export default function RegisterPage() {
             <input
               type="text"
               {...register('name', { required: true })}
-              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200 text-black"
               placeholder=""
             />
             {errors.name && (
@@ -176,15 +208,33 @@ export default function RegisterPage() {
             <span className="text-red-500 text-lg font-bold leading-relaxed">*</span>
           </div>
           <div className="w-full flex flex-col justify-start items-start gap-1">
-            <input
-              type="tel"
-              {...register('phone', { required: true })}
-              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
-              placeholder="01012345678"
-            />
+            <div className="w-full flex gap-2">
+              {/* 국가 코드 선택 드롭다운 */}
+              <select
+                {...register('countryCode', { required: true })}
+                className="h-12 px-2 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200 text-black"
+              >
+                {countryCodes.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.country}
+                  </option>
+                ))}
+              </select>
+              
+              {/* 전화번호 입력 필드 */}
+              <input
+                type="tel"
+                {...register('phone', { required: true })}
+                className="flex-1 h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200 text-black"
+                placeholder={selectedCountryCode === '+82' ? "01012345678" : "Phone number"}
+              />
+            </div>
             {errors.phone && (
               <p className="text-red-600 text-sm mt-1">휴대폰 번호를 입력해주세요</p>
             )}
+            <p className="text-zinc-500 text-xs mt-1">
+              {selectedCountryCode === '+82' ? '"-" 없이 번호만 입력해주세요' : 'Enter number without special characters'}
+            </p>
           </div>
         </div>
         
@@ -199,7 +249,7 @@ export default function RegisterPage() {
               <input
                 type="text"
                 {...register('code', { required: true })}
-                className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+                className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200 text-black"
                 placeholder="6자리 코드"
               />
               {devCode && (

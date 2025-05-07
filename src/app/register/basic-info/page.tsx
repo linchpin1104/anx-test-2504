@@ -227,7 +227,7 @@ export default function BasicInfoPage() {
             <input
               type="number"
               {...register('childAge', { required: true })}
-              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200 text-black"
               min="0"
               placeholder="만나이를 입력"
             />
@@ -275,7 +275,7 @@ export default function BasicInfoPage() {
             <input
               type="text"
               {...register('region', { required: true })}
-              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200"
+              className="w-full h-12 px-4 py-3 bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-neutral-200 text-black"
               placeholder="거주하고 있는 지역 ㅇㅇ시 ㅇㅇ구까지 입력"
             />
             {errors.region && (
