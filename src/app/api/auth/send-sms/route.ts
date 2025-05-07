@@ -13,7 +13,7 @@ function generateSignature(apiSecret: string, date: string, salt: string): strin
   const signature = crypto
     .createHmac('sha256', apiSecret)
     .update(message)
-    .digest('hex');
+    .digest('base64');
   return signature;
 }
 
@@ -141,13 +141,21 @@ export async function POST(request: Request) {
       const salt = Math.random().toString(36).substring(7);
       const signature = generateSignature(apiSecret, date, salt);
 
+      const requestBody = {
+        message: {
+          to: normalizedPhone,
+          from: senderNumber,
+          text: `[더나일] 인증번호는 [${code}] 입니다.`
+        }
+      };
+
       console.log('SMS API 요청 준비:', {
         url: 'https://api.solapi.com/messages/v4/send',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`
         },
-        body: { message }
+        body: requestBody
       });
 
       const response = await fetch('https://api.solapi.com/messages/v4/send', {
@@ -156,19 +164,8 @@ export async function POST(request: Request) {
           'Content-Type': 'application/json',
           'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`
         },
-        body: JSON.stringify({ message })
+        body: JSON.stringify(requestBody)
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('SMS API 응답 오류:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-        throw new Error(`SMS API 응답 오류: ${response.status} ${response.statusText}`);
-      }
 
       const result = await response.json();
       console.log('SMS 발송 결과:', {
