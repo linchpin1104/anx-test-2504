@@ -1,135 +1,131 @@
 import { NextResponse } from 'next/server';
-import { SolapiMessageService } from 'solapi';
 import { setVerificationCode } from '@/lib/verificationStore';
-
-// 6자리 랜덤 인증번호 생성
-function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
 
 // 전화번호 형식 정규화
 function normalizePhoneNumber(phone: string): string {
   return phone.replace(/[^0-9]/g, '');
 }
 
+// SMS 메시지 타입 정의
+interface Message {
+  to: string;
+  from: string;
+  text: string;
+}
+
 export async function POST(request: Request) {
   try {
-    // 요청 데이터 파싱 및 유효성 검사
-    let requestData;
-    try {
-      requestData = await request.json();
-    } catch (error) {
-      console.error('요청 데이터 파싱 실패:', error);
+    // 요청 본문에서 전화번호 추출
+    const { phoneNumber } = await request.json();
+    
+    // 필수 값 확인
+    if (!phoneNumber) {
       return NextResponse.json(
-        { success: false, message: '잘못된 요청 형식입니다.' },
-        { status: 400 }
-      );
-    }
-
-    const { phoneNumber } = requestData;
-
-    // 전화번호 유효성 검사
-    if (!phoneNumber || typeof phoneNumber !== 'string') {
-      console.error('전화번호 누락 또는 잘못된 형식:', { phoneNumber });
-      return NextResponse.json(
-        { success: false, message: '유효한 전화번호가 필요합니다.' },
+        { success: false, message: '전화번호가 필요합니다.' },
         { status: 400 }
       );
     }
 
     // 전화번호 정규화
     const normalizedPhone = normalizePhoneNumber(phoneNumber);
-    console.log('전화번호 정규화:', { original: phoneNumber, normalized: normalizedPhone });
-
-    // 인증번호 생성 및 저장
-    const verificationCode = generateVerificationCode();
-    const message = `[더나일] 인증번호는 [${verificationCode}] 입니다.`;
-    
-    // 인증 코드 저장 (5분 유효)
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
-    
-    console.log('인증번호 저장 시도:', {
-      phone: normalizedPhone,
-      code: verificationCode,
-      expiresAt: expiresAt.toISOString()
+    console.log('전화번호 정규화:', { 
+      original: phoneNumber, 
+      normalized: normalizedPhone,
+      timestamp: new Date().toISOString()
     });
-    
-    await setVerificationCode(normalizedPhone, verificationCode, expiresAt);
-    
+
+    // 전화번호 유효성 검사
+    if (!/^01[0-9]{8,9}$/.test(normalizedPhone)) {
+      return NextResponse.json(
+        { success: false, message: '유효하지 않은 전화번호입니다.' },
+        { status: 400 }
+      );
+    }
+
     // 환경 변수 확인
     const apiKey = process.env.SOLAPI_API_KEY;
     const apiSecret = process.env.SOLAPI_API_SECRET;
     const senderNumber = process.env.SOLAPI_SENDER_NUMBER;
-    
+
     if (!apiKey || !apiSecret || !senderNumber) {
-      console.error('Solapi 설정이 완료되지 않았습니다.', {
+      console.error('SMS 서비스 설정 누락:', {
         hasApiKey: !!apiKey,
         hasApiSecret: !!apiSecret,
         hasSenderNumber: !!senderNumber
       });
       return NextResponse.json(
-        { success: false, message: 'SMS 서비스 구성이 완료되지 않았습니다.' },
+        { success: false, message: 'SMS 서비스 설정이 누락되었습니다.' },
         { status: 500 }
       );
     }
-    
-    // Solapi 메시지 서비스 초기화
-    const messageService = new SolapiMessageService(apiKey, apiSecret);
-    
-    // SMS 메시지 발송
+
+    // 6자리 랜덤 인증 코드 생성
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log('인증번호 생성:', {
+      phone: normalizedPhone,
+      code,
+      timestamp: new Date().toISOString()
+    });
+
+    // 인증 코드 저장 (3분 후 만료)
+    const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
+    await setVerificationCode(normalizedPhone, code, expiresAt);
+
+    // SMS 발송
+    const message: Message = {
+      to: normalizedPhone,
+      from: senderNumber,
+      text: `[더나일] 인증번호는 [${code}] 입니다.`
+    };
+
     console.log('SMS 발송 시도:', {
-      to: normalizedPhone,
-      from: senderNumber,
-      messageLength: message.length
+      phone: normalizedPhone,
+      code,
+      expiresAt: expiresAt.toISOString(),
+      timestamp: new Date().toISOString()
     });
-    
-    const result = await messageService.sendOne({
-      to: normalizedPhone,
-      from: senderNumber,
-      text: message
-    });
-    
-    // 메시지 발송 결과 확인
-    if (result && result.statusCode === '2000') {
-      console.log('SMS 발송 성공:', {
-        messageId: result.messageId,
-        statusCode: result.statusCode,
-        phone: normalizedPhone
+
+    // 개발 환경에서는 실제 SMS 발송을 건너뛰고 성공 응답
+    if (process.env.NODE_ENV === 'development') {
+      console.log('개발 환경: SMS 발송 건너뜀');
+      return NextResponse.json({
+        success: true,
+        message: '인증번호가 발송되었습니다.',
+        code // 개발 환경에서만 코드 반환
       });
+    }
+
+    // 프로덕션 환경에서는 실제 SMS 발송
+    const response = await fetch('https://api.solapi.com/messages/v4/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(7)}, signature=${apiSecret}`
+      },
+      body: JSON.stringify({ message })
+    });
+
+    const result = await response.json();
+    console.log('SMS 발송 결과:', {
+      phone: normalizedPhone,
+      code,
+      result,
+      timestamp: new Date().toISOString()
+    });
+
+    if (result.status === 'success') {
       return NextResponse.json({
         success: true,
         message: '인증번호가 발송되었습니다.'
       });
     } else {
-      console.error('SMS 발송 실패:', {
-        result,
-        statusCode: result?.statusCode,
-        messageId: result?.messageId,
-        phone: normalizedPhone
-      });
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: '인증번호 발송에 실패했습니다.',
-          error: `상태 코드: ${result?.statusCode || '알 수 없음'}`
-        },
-        { status: 500 }
-      );
+      throw new Error(result.errorMessage || 'SMS 발송에 실패했습니다.');
     }
-    
+
   } catch (error) {
-    console.error('SMS 발송 중 오류 발생:', {
-      error,
-      message: error instanceof Error ? error.message : '알 수 없는 오류',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+    console.error('SMS 발송 오류:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: '인증번호 발송 중 오류가 발생했습니다.',
-        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-      },
+      { success: false, message: '인증번호 발송 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

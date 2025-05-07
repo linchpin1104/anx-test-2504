@@ -32,7 +32,11 @@ export default function RegisterPage() {
     try {
       // 전화번호 정규화
       const normalizedPhone = normalizePhoneNumber(data.phone);
-      console.log('인증번호 요청:', { original: data.phone, normalized: normalizedPhone });
+      console.log('인증번호 요청:', { 
+        original: data.phone, 
+        normalized: normalizedPhone,
+        timestamp: new Date().toISOString()
+      });
 
       // 프로덕션 모드에서는 실제 API 호출
       const smsRes = await fetch('/api/auth/send-sms', {
@@ -45,6 +49,7 @@ export default function RegisterPage() {
       let smsData;
       try {
         smsData = await smsRes.json();
+        console.log('인증번호 요청 응답:', smsData);
       } catch (parseError) {
         console.error('API 응답 파싱 오류:', parseError);
         throw new Error('서버 응답 처리 중 오류가 발생했습니다.');
@@ -85,7 +90,8 @@ export default function RegisterPage() {
       console.log('인증번호 확인:', { 
         original: data.phone, 
         normalized: normalizedPhone,
-        code: data.code 
+        code: data.code,
+        timestamp: new Date().toISOString()
       });
 
       const res = await fetch('/api/auth/verify-sms', {
@@ -101,6 +107,7 @@ export default function RegisterPage() {
       let json;
       try {
         json = await res.json();
+        console.log('인증번호 확인 응답:', json);
       } catch (parseError) {
         console.error('API 응답 파싱 오류:', parseError);
         throw new Error('서버 응답 처리 중 오류가 발생했습니다.');
