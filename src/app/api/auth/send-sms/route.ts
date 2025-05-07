@@ -9,7 +9,7 @@ function normalizePhoneNumber(phone: string): string {
 
 // HMAC-SHA256 서명 생성
 function generateSignature(apiKey: string, apiSecret: string, date: string, salt: string): string {
-  const message = `date=${date}\nsalt=${salt}\napiKey=${apiKey}`;
+  const message = `apiKey=${apiKey}\ndate=${date}\nsalt=${salt}`;
   const hmac = crypto.createHmac('sha256', apiSecret);
   hmac.update(message);
   return hmac.digest('base64');
@@ -153,8 +153,11 @@ export async function POST(request: Request) {
         },
         body: requestBody,
         signature: {
-          message: `date=${date}\nsalt=${salt}\napiKey=${apiKey}`,
-          signature
+          message: `apiKey=${apiKey}\ndate=${date}\nsalt=${salt}`,
+          signature,
+          apiKey,
+          date,
+          salt
         }
       });
 
