@@ -32,7 +32,11 @@ export async function POST(request: Request) {
     const senderNumber = process.env.SOLAPI_SENDER_NUMBER;
     
     if (!apiKey || !apiSecret || !senderNumber) {
-      console.error('Solapi 설정이 완료되지 않았습니다.');
+      console.error('Solapi 설정이 완료되지 않았습니다.', {
+        hasApiKey: !!apiKey,
+        hasApiSecret: !!apiSecret,
+        hasSenderNumber: !!senderNumber
+      });
       return NextResponse.json(
         { success: false, message: 'SMS 서비스 구성이 완료되지 않았습니다.' },
         { status: 500 }
@@ -43,6 +47,12 @@ export async function POST(request: Request) {
     const messageService = new SolapiMessageService(apiKey, apiSecret);
     
     // SMS 메시지 발송
+    console.log('SMS 발송 시도:', {
+      to: formattedPhoneNumber,
+      from: senderNumber,
+      messageLength: message.length
+    });
+    
     const result = await messageService.sendOne({
       to: formattedPhoneNumber,
       from: senderNumber,
@@ -51,22 +61,42 @@ export async function POST(request: Request) {
     
     // 메시지 발송 결과 확인
     if (result && result.statusCode === '2000') {
+      console.log('SMS 발송 성공:', {
+        messageId: result.messageId,
+        statusCode: result.statusCode
+      });
       return NextResponse.json({
         success: true,
         message: '인증번호가 발송되었습니다.'
       });
     } else {
-      console.error('SMS 발송 실패:', result);
+      console.error('SMS 발송 실패:', {
+        result,
+        statusCode: result?.statusCode,
+        messageId: result?.messageId
+      });
       return NextResponse.json(
-        { success: false, message: '인증번호 발송에 실패했습니다.' },
+        { 
+          success: false, 
+          message: '인증번호 발송에 실패했습니다.',
+          error: `상태 코드: ${result?.statusCode || '알 수 없음'}`
+        },
         { status: 500 }
       );
     }
     
   } catch (error) {
-    console.error('SMS 발송 중 오류 발생:', error);
+    console.error('SMS 발송 중 오류 발생:', {
+      error,
+      message: error instanceof Error ? error.message : '알 수 없는 오류',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
-      { success: false, message: '인증번호 발송 중 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        message: '인증번호 발송 중 오류가 발생했습니다.',
+        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+      },
       { status: 500 }
     );
   }
