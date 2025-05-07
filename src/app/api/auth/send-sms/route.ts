@@ -9,10 +9,23 @@ function normalizePhoneNumber(phone: string): string {
 
 // HMAC-SHA256 서명 생성
 function generateSignature(apiKey: string, apiSecret: string, date: string, salt: string): string {
+  // SOLAPI 문서에 따른 메시지 형식 변경
   const message = `date=${date}\nsalt=${salt}\napiKey=${apiKey}`;
   const hmac = crypto.createHmac('sha256', apiSecret);
   hmac.update(message);
-  return hmac.digest('base64');
+  const signature = hmac.digest('base64');
+  
+  // 디버깅을 위한 로그
+  console.log('서명 생성 상세:', {
+    message,
+    apiKey,
+    date,
+    salt,
+    signature,
+    apiSecretLength: apiSecret.length
+  });
+  
+  return signature;
 }
 
 // SMS 메시지 타입 정의
@@ -137,6 +150,12 @@ export async function POST(request: Request) {
       // 프로덕션 환경에서는 실제 SMS 발송
       const date = new Date().toISOString();
       const salt = Math.random().toString(36).substring(7);
+      
+      // API Secret이 올바른 형식인지 확인
+      if (!apiSecret || apiSecret.trim() === '') {
+        throw new Error('API Secret이 설정되지 않았습니다.');
+      }
+      
       const signature = generateSignature(apiKey, apiSecret, date, salt);
 
       const requestBody = {
@@ -158,7 +177,7 @@ export async function POST(request: Request) {
           apiKey,
           date,
           salt,
-          apiSecret: apiSecret ? '***' : undefined // API Secret은 로그에 표시하지 않음
+          apiSecret: apiSecret ? '***' : undefined
         }
       });
 
@@ -181,7 +200,9 @@ export async function POST(request: Request) {
           date,
           salt,
           signature,
-          message: `date=${date}\nsalt=${salt}\napiKey=${apiKey}`
+          message: `date=${date}\nsalt=${salt}\napiKey=${apiKey}`,
+          status: response.status,
+          statusText: response.statusText
         }
       });
 
