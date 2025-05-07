@@ -9,7 +9,7 @@ function normalizePhoneNumber(phone: string): string {
 
 // HMAC-SHA256 서명 생성
 function generateSignature(apiKey: string, apiSecret: string, date: string, salt: string): string {
-  const message = `apiKey=${apiKey}\ndate=${date}\nsalt=${salt}`;
+  const message = `date=${date}\nsalt=${salt}\napiKey=${apiKey}`;
   const hmac = crypto.createHmac('sha256', apiSecret);
   hmac.update(message);
   return hmac.digest('base64');
@@ -153,11 +153,12 @@ export async function POST(request: Request) {
         },
         body: requestBody,
         signature: {
-          message: `apiKey=${apiKey}\ndate=${date}\nsalt=${salt}`,
+          message: `date=${date}\nsalt=${salt}\napiKey=${apiKey}`,
           signature,
           apiKey,
           date,
-          salt
+          salt,
+          apiSecret: apiSecret ? '***' : undefined // API Secret은 로그에 표시하지 않음
         }
       });
 
@@ -175,7 +176,13 @@ export async function POST(request: Request) {
         phone: normalizedPhone,
         code,
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        requestInfo: {
+          date,
+          salt,
+          signature,
+          message: `date=${date}\nsalt=${salt}\napiKey=${apiKey}`
+        }
       });
 
       if (result.status === 'success') {
