@@ -15,11 +15,19 @@ export async function setVerificationCode(phone: string, code: string, expiresAt
   }
 
   try {
-    await firestore.collection('verifications').doc(phone).set({
+    const data = {
       code,
       expiresAt: Timestamp.fromDate(expiresAt),
       createdAt: Timestamp.fromDate(new Date())
+    };
+    
+    console.log('인증번호 저장:', {
+      phone,
+      code,
+      expiresAt: expiresAt.toISOString()
     });
+    
+    await firestore.collection('verifications').doc(phone).set(data);
   } catch (error) {
     console.error('Error saving verification code:', error);
     throw error;
@@ -35,18 +43,28 @@ export async function getVerificationCode(phone: string): Promise<VerificationDa
   try {
     const doc = await firestore.collection('verifications').doc(phone).get();
     if (!doc.exists) {
+      console.log('인증번호 없음:', { phone });
       return undefined;
     }
 
     const data = doc.data();
     if (!data) {
+      console.log('인증번호 데이터 없음:', { phone });
       return undefined;
     }
 
-    return {
+    const verificationData = {
       code: data.code,
       expiresAt: data.expiresAt.toDate()
     };
+
+    console.log('인증번호 조회:', {
+      phone,
+      code: verificationData.code,
+      expiresAt: verificationData.expiresAt.toISOString()
+    });
+
+    return verificationData;
   } catch (error) {
     console.error('Error getting verification code:', error);
     return undefined;
@@ -60,6 +78,7 @@ export async function deleteVerificationCode(phone: string): Promise<boolean> {
   }
 
   try {
+    console.log('인증번호 삭제:', { phone });
     await firestore.collection('verifications').doc(phone).delete();
     return true;
   } catch (error) {
