@@ -8,8 +8,8 @@ interface VerificationData {
   attempts?: number;
 }
 
-// 최대 인증 시도 횟수
-const MAX_ATTEMPTS = 5;
+// 최대 인증 시도 횟수 (매우 큰 값으로 설정하여 사실상 제한 없음)
+const MAX_ATTEMPTS = 9999;
 
 export async function setVerificationCode(phone: string, code: string, expiresAt: Date): Promise<void> {
   if (!firestore) {
@@ -117,12 +117,13 @@ export async function incrementAttempts(phone: string): Promise<boolean> {
     const data = doc.data();
     const currentAttempts = (data?.attempts || 0) + 1;
 
-    if (currentAttempts >= MAX_ATTEMPTS) {
-      console.log('최대 시도 횟수 초과:', { phone, attempts: currentAttempts });
-      // 최대 시도 횟수 초과 시 인증 코드 삭제
-      await deleteVerificationCode(phone);
-      return false;
-    }
+    // 인증 시도 횟수 제한 제거 - 항상 true 반환
+    // if (currentAttempts >= MAX_ATTEMPTS) {
+    //   console.log('최대 시도 횟수 초과:', { phone, attempts: currentAttempts });
+    //   // 최대 시도 횟수 초과 시 인증 코드 삭제
+    //   await deleteVerificationCode(phone);
+    //   return false;
+    // }
 
     await docRef.update({ attempts: currentAttempts });
     console.log('인증 시도 횟수 증가 성공:', { phone, attempts: currentAttempts });

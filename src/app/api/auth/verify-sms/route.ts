@@ -27,12 +27,22 @@ export async function POST(request: Request) {
     const normalizedPhone = normalizePhoneNumber(phone);
     console.log('전화번호 정규화:', { original: phone, normalized: normalizedPhone });
     
-    // 인증 코드 확인 - 이 단계를 먼저 수행
+    // 인증 시도 횟수 증가
+    const canAttempt = await incrementAttempts(normalizedPhone);
+    if (!canAttempt) {
+      return NextResponse.json({ 
+        success: false, 
+        verified: false, 
+        message: '인증번호가 발급되지 않았습니다. 먼저 인증번호를 요청해주세요.' 
+      });
+    }
+    
+    // 인증 코드 확인
     const verification = await getVerificationCode(normalizedPhone);
     
-    // 인증 코드가 없는 경우
+    // 인증 코드가 없거나 만료된 경우
     if (!verification) {
-      console.log('인증번호 없음:', {
+      console.log('인증번호 없음 또는 만료:', {
         phone: normalizedPhone,
         receivedCode: code,
         currentTime: new Date().toISOString()
@@ -40,7 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         success: false, 
         verified: false, 
-        message: '인증번호가 발급되지 않았습니다. 먼저 인증번호를 요청해주세요.' 
+        message: '인증번호가 발급되지 않았거나 만료되었습니다. 다시 요청해주세요.' 
       });
     }
     
@@ -63,16 +73,6 @@ export async function POST(request: Request) {
         success: false, 
         verified: false, 
         message: '인증번호가 만료되었습니다. 다시 요청해주세요.' 
-      });
-    }
-    
-    // 인증 시도 횟수 증가 - 인증 정보가 있고 만료되지 않은 경우에만 수행
-    const canAttempt = await incrementAttempts(normalizedPhone);
-    if (!canAttempt) {
-      return NextResponse.json({ 
-        success: false, 
-        verified: false, 
-        message: '인증 시도 횟수가 초과되었습니다. 새로운 인증번호를 요청해주세요.' 
       });
     }
     
