@@ -42,7 +42,7 @@ export default function RegisterPage() {
       const smsRes = await fetch('/api/auth/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: normalizedPhone }),
+        body: JSON.stringify({ phone: normalizedPhone }),
       });
       
       // 응답 파싱 시도
@@ -56,7 +56,7 @@ export default function RegisterPage() {
       }
       
       if (!smsData.success) {
-        throw new Error(smsData.error || '인증번호 발송에 실패했습니다.');
+        throw new Error(smsData.message || '인증번호 발송에 실패했습니다.');
       }
       
       // 개발 환경에서 인증번호가 응답에 포함된 경우 자동으로 입력
@@ -111,6 +111,10 @@ export default function RegisterPage() {
       } catch (parseError) {
         console.error('API 응답 파싱 오류:', parseError);
         throw new Error('서버 응답 처리 중 오류가 발생했습니다.');
+      }
+      
+      if (!res.ok) {
+        throw new Error(json.message || '인증 확인 중 오류가 발생했습니다.');
       }
       
       if (json.verified) {

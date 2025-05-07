@@ -6,19 +6,23 @@ import { Timestamp } from 'firebase-admin/firestore';
 interface VerificationData {
   code: string;
   expiresAt: Date;
+  attempts?: number;
 }
+
+// 최대 인증 시도 횟수
+const MAX_ATTEMPTS = 5;
 
 export async function setVerificationCode(phone: string, code: string, expiresAt: Date): Promise<void> {
   if (!firestore) {
-    console.error('Firestore is not initialized');
-    return;
+    throw new Error('Firestore is not initialized');
   }
 
   try {
     const data = {
       code,
       expiresAt: Timestamp.fromDate(expiresAt),
-      createdAt: Timestamp.fromDate(new Date())
+      createdAt: Timestamp.fromDate(new Date()),
+      attempts: 0
     };
     
     console.log('인증번호 저장:', {
@@ -31,14 +35,13 @@ export async function setVerificationCode(phone: string, code: string, expiresAt
     await firestore.collection('verifications').doc(phone).set(data);
   } catch (error) {
     console.error('Error saving verification code:', error);
-    throw error;
+    throw new Error('인증번호 저장 중 오류가 발생했습니다.');
   }
 }
 
 export async function getVerificationCode(phone: string): Promise<VerificationData | undefined> {
   if (!firestore) {
-    console.error('Firestore is not initialized');
-    return undefined;
+    throw new Error('Firestore is not initialized');
   }
 
   try {
@@ -54,14 +57,15 @@ export async function getVerificationCode(phone: string): Promise<VerificationDa
       return undefined;
     }
 
-    // 타임스탬프를 Date 객체로 변환
+    // 타임스탬프를 Date 객체로 변환 (UTC 기준)
     const expiresAt = data.expiresAt instanceof Timestamp 
-      ? data.expiresAt.toDate()
+      ? new Date(data.expiresAt.toDate().getTime())
       : new Date(data.expiresAt.seconds * 1000);
 
     const verificationData = {
       code: data.code,
-      expiresAt
+      expiresAt,
+      attempts: data.attempts || 0
     };
 
     console.log('인증번호 조회:', {
@@ -69,20 +73,50 @@ export async function getVerificationCode(phone: string): Promise<VerificationDa
       code: verificationData.code,
       expiresAt: verificationData.expiresAt.toISOString(),
       currentTime: new Date().toISOString(),
-      isExpired: new Date() > expiresAt
+      isExpired: new Date() > expiresAt,
+      attempts: verificationData.attempts
     });
 
     return verificationData;
   } catch (error) {
     console.error('Error getting verification code:', error);
-    return undefined;
+    throw new Error('인증번호 조회 중 오류가 발생했습니다.');
+  }
+}
+
+export async function incrementAttempts(phone: string): Promise<boolean> {
+  if (!firestore) {
+    throw new Error('Firestore is not initialized');
+  }
+
+  try {
+    const docRef = firestore.collection('verifications').doc(phone);
+    const doc = await docRef.get();
+    
+    if (!doc.exists) {
+      return false;
+    }
+
+    const data = doc.data();
+    const currentAttempts = (data?.attempts || 0) + 1;
+
+    if (currentAttempts >= MAX_ATTEMPTS) {
+      // 최대 시도 횟수 초과 시 인증 코드 삭제
+      await deleteVerificationCode(phone);
+      return false;
+    }
+
+    await docRef.update({ attempts: currentAttempts });
+    return true;
+  } catch (error) {
+    console.error('Error incrementing attempts:', error);
+    throw new Error('인증 시도 횟수 업데이트 중 오류가 발생했습니다.');
   }
 }
 
 export async function deleteVerificationCode(phone: string): Promise<boolean> {
   if (!firestore) {
-    console.error('Firestore is not initialized');
-    return false;
+    throw new Error('Firestore is not initialized');
   }
 
   try {
@@ -91,6 +125,6 @@ export async function deleteVerificationCode(phone: string): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('Error deleting verification code:', error);
-    return false;
+    throw new Error('인증번호 삭제 중 오류가 발생했습니다.');
   }
 } 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getVerificationCode, deleteVerificationCode } from '@/lib/verificationStore';
+import { getVerificationCode, deleteVerificationCode, incrementAttempts } from '@/lib/verificationStore';
 
 // 참조: send-sms 라우트와 동일한 인증 코드 저장소 사용
 // 이 구현은 서버 재시작 시 코드가 초기화되므로 실제로는 공유 저장소(Redis 등)를 사용해야 함
@@ -27,6 +27,16 @@ export async function POST(request: Request) {
     const normalizedPhone = normalizePhoneNumber(phone);
     console.log('전화번호 정규화:', { original: phone, normalized: normalizedPhone });
     
+    // 인증 시도 횟수 증가
+    const canAttempt = await incrementAttempts(normalizedPhone);
+    if (!canAttempt) {
+      return NextResponse.json({ 
+        success: false, 
+        verified: false, 
+        message: '인증 시도 횟수가 초과되었습니다. 새로운 인증번호를 요청해주세요.' 
+      });
+    }
+    
     // 인증 코드 확인
     const verification = await getVerificationCode(normalizedPhone);
     
@@ -44,7 +54,7 @@ export async function POST(request: Request) {
       });
     }
     
-    // 현재 시간 확인
+    // 현재 시간 확인 (UTC 기준)
     const now = new Date();
     
     // 만료 확인
@@ -74,7 +84,8 @@ export async function POST(request: Request) {
         expectedCode: verification.code,
         expiresAt: verification.expiresAt.toISOString(),
         currentTime: now.toISOString(),
-        isExpired: now > verification.expiresAt
+        isExpired: now > verification.expiresAt,
+        attempts: verification.attempts
       });
       return NextResponse.json({ 
         success: false, 
