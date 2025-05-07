@@ -9,22 +9,37 @@ function generateVerificationCode(): string {
 
 export async function POST(request: Request) {
   try {
-    const { phoneNumber } = await request.json();
+    // 요청 데이터 파싱 및 유효성 검사
+    let requestData;
+    try {
+      requestData = await request.json();
+    } catch (error) {
+      console.error('요청 데이터 파싱 실패:', error);
+      return NextResponse.json(
+        { success: false, message: '잘못된 요청 형식입니다.' },
+        { status: 400 }
+      );
+    }
+
+    const { phoneNumber } = requestData;
+
+    // 전화번호 유효성 검사
+    if (!phoneNumber || typeof phoneNumber !== 'string') {
+      console.error('전화번호 누락 또는 잘못된 형식:', { phoneNumber });
+      return NextResponse.json(
+        { success: false, message: '유효한 전화번호가 필요합니다.' },
+        { status: 400 }
+      );
+    }
+
     const formattedPhoneNumber = phoneNumber.replace(/-/g, '');
     const verificationCode = generateVerificationCode();
     const message = `[더나일] 인증번호는 [${verificationCode}] 입니다.`;
     
-    if (!formattedPhoneNumber) {
-      return NextResponse.json(
-        { success: false, message: '전화번호가 필요합니다.' },
-        { status: 400 }
-      );
-    }
-    
     // 인증 코드 저장 (5분 유효)
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 5);
-    setVerificationCode(formattedPhoneNumber, verificationCode, expiresAt);
+    await setVerificationCode(formattedPhoneNumber, verificationCode, expiresAt);
     
     // 환경 변수 확인
     const apiKey = process.env.SOLAPI_API_KEY;

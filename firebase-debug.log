@@ -33,3 +33,215 @@ Before we get started, keep in mind:
 [info] 
 [debug] [2025-05-05T13:40:30.604Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
 [debug] [2025-05-05T13:40:30.604Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2025-05-07T06:24:46.318Z] ----------------------------------------------------------------------
+[debug] [2025-05-07T06:24:46.321Z] Command:       /opt/homebrew/Cellar/node/23.11.0/bin/node /opt/homebrew/bin/firebase deploy --only functions --debug
+[debug] [2025-05-07T06:24:46.321Z] CLI Version:   14.2.2
+[debug] [2025-05-07T06:24:46.322Z] Platform:      darwin
+[debug] [2025-05-07T06:24:46.322Z] Node Version:  v23.11.0
+[debug] [2025-05-07T06:24:46.322Z] Time:          Wed May 07 2025 15:24:46 GMT+0900 (Korean Standard Time)
+[debug] [2025-05-07T06:24:46.322Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-05-07T06:24:46.417Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-05-07T06:24:46.417Z] > authorizing via signed-in user (yerini1104@gmail.com)
+[debug] [2025-05-07T06:24:46.417Z] [iam] checking project anx-test-faadd for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-05-07T06:24:46.418Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:46.418Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:46.418Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions [none]
+[debug] [2025-05-07T06:24:46.418Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:24:46.418Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-05-07T06:24:47.773Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions 200
+[debug] [2025-05-07T06:24:47.773Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-05-07T06:24:47.773Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:47.773Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:47.773Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/anx-test-faadd/serviceAccounts/anx-test-faadd@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-05-07T06:24:47.773Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/anx-test-faadd/serviceAccounts/anx-test-faadd@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-05-07T06:24:49.020Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/anx-test-faadd/serviceAccounts/anx-test-faadd@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-05-07T06:24:49.021Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/anx-test-faadd/serviceAccounts/anx-test-faadd@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'anx-test-faadd'...
+[info] 
+[info] i  deploying functions 
+[debug] [2025-05-07T06:24:49.022Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.022Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.022Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd [none]
+[debug] [2025-05-07T06:24:49.279Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd 200
+[debug] [2025-05-07T06:24:49.279Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd {"projectNumber":"576536060563","projectId":"anx-test-faadd","lifecycleState":"ACTIVE","name":"anx-test-app","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-04-24T14:49:50.207391Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[debug] [2025-05-07T06:24:49.280Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.280Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.281Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.281Z] Checked if tokens are valid: true, expires at: 1746602405518
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[debug] [2025-05-07T06:24:49.281Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.281Z] Checked if tokens are valid: true, expires at: 1746602405518
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-05-07T06:24:49.281Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.281Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:49.281Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-05-07T06:24:49.281Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:24:49.283Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-05-07T06:24:49.283Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:24:49.284Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudbuild.googleapis.com [none]
+[debug] [2025-05-07T06:24:49.285Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudbuild.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:24:49.286Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/artifactregistry.googleapis.com [none]
+[debug] [2025-05-07T06:24:49.286Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/artifactregistry.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:24:50.560Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/runtimeconfig.googleapis.com 200
+[debug] [2025-05-07T06:24:50.561Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-05-07T06:24:50.561Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudbuild.googleapis.com 200
+[debug] [2025-05-07T06:24:50.561Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudbuild.googleapis.com [omitted]
+[info] ✔  functions: required API cloudbuild.googleapis.com is enabled 
+[debug] [2025-05-07T06:24:50.565Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudfunctions.googleapis.com 200
+[debug] [2025-05-07T06:24:50.565Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/cloudfunctions.googleapis.com [omitted]
+[info] ✔  functions: required API cloudfunctions.googleapis.com is enabled 
+[debug] [2025-05-07T06:24:50.574Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/artifactregistry.googleapis.com 200
+[debug] [2025-05-07T06:24:50.574Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/artifactregistry.googleapis.com [omitted]
+[info] ✔  artifactregistry: required API artifactregistry.googleapis.com is enabled 
+[debug] [2025-05-07T06:24:50.574Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:50.574Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:50.574Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/anx-test-faadd/adminSdkConfig [none]
+[debug] [2025-05-07T06:24:51.027Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/anx-test-faadd/adminSdkConfig 200
+[debug] [2025-05-07T06:24:51.027Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/anx-test-faadd/adminSdkConfig {"projectId":"anx-test-faadd","storageBucket":"anx-test-faadd.firebasestorage.app"}
+[debug] [2025-05-07T06:24:51.027Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:51.027Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:51.027Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/anx-test-faadd/configs [none]
+[debug] [2025-05-07T06:24:51.448Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/anx-test-faadd/configs 200
+[debug] [2025-05-07T06:24:51.449Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/anx-test-faadd/configs {}
+[debug] [2025-05-07T06:24:51.449Z] Validating nodejs source
+[debug] [2025-05-07T06:24:51.847Z] > [functions] package.json contents: {
+  "name": "functions",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase-admin": "^13.3.0",
+    "firebase-functions": "^6.3.2",
+    "googleapis": "^148.0.0"
+  },
+  "description": ""
+}
+[debug] [2025-05-07T06:24:51.847Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2025-05-07T06:24:51.848Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-05-07T06:24:51.852Z] Found firebase-functions binary at '/Users/ihyelin/Documents/anx_test_app_new/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8286
+
+[debug] [2025-05-07T06:24:52.579Z] Got response from /__/functions.yaml {"endpoints":{"saveResultToSheet":{"availableMemoryMb":256,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["asia-northeast3"],"labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"users/{userId}/results/{docId}"},"retry":false},"entryPoint":"saveResultToSheet"},"updateResultInSheet":{"availableMemoryMb":256,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["asia-northeast3"],"labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.updated","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"users/{userId}/results/{docId}"},"retry":false},"entryPoint":"updateResultInSheet"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2025-05-07T06:24:56.598Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:56.598Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:56.599Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/firebaseextensions.googleapis.com [none]
+[debug] [2025-05-07T06:24:56.599Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/firebaseextensions.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:24:57.931Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/firebaseextensions.googleapis.com 200
+[debug] [2025-05-07T06:24:57.931Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/firebaseextensions.googleapis.com [omitted]
+[info] ✔  extensions: required API firebaseextensions.googleapis.com is enabled 
+[debug] [2025-05-07T06:24:57.932Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-05-07T06:24:57.932Z] > authorizing via signed-in user (yerini1104@gmail.com)
+[debug] [2025-05-07T06:24:57.932Z] [iam] checking project anx-test-faadd for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2025-05-07T06:24:57.932Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:57.932Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:57.932Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions [none]
+[debug] [2025-05-07T06:24:57.932Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:24:57.932Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-05-07T06:24:58.967Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions 200
+[debug] [2025-05-07T06:24:58.968Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-05-07T06:24:58.969Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:58.969Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:24:58.969Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/anx-test-faadd/instances pageSize=100&pageToken=
+[debug] [2025-05-07T06:25:00.099Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/anx-test-faadd/instances 200
+[debug] [2025-05-07T06:25:00.100Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/anx-test-faadd/instances {}
+[info] i  functions: preparing functions directory for uploading... 
+[info] i  functions: packaged /Users/ihyelin/Documents/anx_test_app_new/functions (33.94 KB) for uploading 
+[debug] [2025-05-07T06:25:00.134Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:00.134Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:00.134Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/anx-test-faadd/locations/-/functions [none]
+[debug] [2025-05-07T06:25:00.964Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/anx-test-faadd/locations/-/functions 200
+[debug] [2025-05-07T06:25:00.964Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/anx-test-faadd/locations/-/functions {}
+[debug] [2025-05-07T06:25:00.965Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:00.965Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:00.965Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/anx-test-faadd/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2025-05-07T06:25:02.303Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/anx-test-faadd/locations/-/functions 200
+[debug] [2025-05-07T06:25:02.303Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/anx-test-faadd/locations/-/functions {"functions":[{"name":"projects/anx-test-faadd/locations/asia-northeast3/functions/saveResultToSheet","buildConfig":{"build":"projects/576536060563/locations/asia-northeast3/builds/2d01f5a4-e509-4653-88dd-023a401fa16e","runtime":"nodejs20","entryPoint":"saveResultToSheet","source":{"storageSource":{"bucket":"gcf-v2-sources-576536060563-asia-northeast3","object":"saveResultToSheet/function-source.zip","generation":"1746596871669170"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/anx-test-faadd/locations/asia-northeast3/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-576536060563-asia-northeast3","object":"saveResultToSheet/function-source.zip","generation":"1746596871669170"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/anx-test-faadd/serviceAccounts/576536060563-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/anx-test-faadd/locations/asia-northeast3/services/saveresulttosheet","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"anx-test-faadd\",\"storageBucket\":\"anx-test-faadd.firebasestorage.app\"}","GCLOUD_PROJECT":"anx-test-faadd","EVENTARC_CLOUD_EVENT_SOURCE":"projects/anx-test-faadd/locations/asia-northeast3/services/saveResultToSheet","FUNCTION_SIGNATURE_TYPE":"cloudevent","FUNCTION_TARGET":"saveResultToSheet","LOG_EXECUTION_ID":"true"},"maxInstanceCount":40,"ingressSettings":"ALLOW_ALL","uri":"https://saveresulttosheet-uuiv6oge3a-du.a.run.app","serviceAccountEmail":"576536060563-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"saveresulttosheet-00001-boq","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"eventTrigger":{"trigger":"projects/anx-test-faadd/locations/asia-northeast3/triggers/saveresulttosheet-571332","triggerRegion":"asia-northeast3","eventType":"google.cloud.firestore.document.v1.created","eventFilters":[{"attribute":"document","value":"users/{userId}/results/{docId}","operator":"match-path-pattern"},{"attribute":"database","value":"(default)"},{"attribute":"namespace","value":"(default)"}],"pubsubTopic":"projects/anx-test-faadd/topics/eventarc-asia-northeast3-saveresulttosheet-571332-946","serviceAccountEmail":"576536060563-compute@developer.gserviceaccount.com","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY"},"state":"ACTIVE","updateTime":"2025-05-07T05:50:09.914941455Z","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"30c84347c809ea125027c3c981fc032f5b9979f8"},"environment":"GEN_2","url":"https://asia-northeast3-anx-test-faadd.cloudfunctions.net/saveResultToSheet","satisfiesPzs":true,"createTime":"2025-05-07T05:47:52.370271945Z","satisfiesPzi":true},{"name":"projects/anx-test-faadd/locations/asia-northeast3/functions/updateResultInSheet","buildConfig":{"build":"projects/576536060563/locations/asia-northeast3/builds/2d01f5a4-e509-4653-88dd-023a401fa16e","runtime":"nodejs20","entryPoint":"updateResultInSheet","source":{"storageSource":{"bucket":"gcf-v2-sources-576536060563-asia-northeast3","object":"updateResultInSheet/function-source.zip","generation":"1746596953458384"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/anx-test-faadd/locations/asia-northeast3/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-576536060563-asia-northeast3","object":"updateResultInSheet/function-source.zip","generation":"1746596953458384"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/anx-test-faadd/serviceAccounts/576536060563-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/anx-test-faadd/locations/asia-northeast3/services/updateresultinsheet","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"anx-test-faadd\",\"storageBucket\":\"anx-test-faadd.firebasestorage.app\"}","GCLOUD_PROJECT":"anx-test-faadd","EVENTARC_CLOUD_EVENT_SOURCE":"projects/anx-test-faadd/locations/asia-northeast3/services/updateResultInSheet","FUNCTION_SIGNATURE_TYPE":"cloudevent","FUNCTION_TARGET":"updateResultInSheet","LOG_EXECUTION_ID":"true"},"maxInstanceCount":40,"ingressSettings":"ALLOW_ALL","uri":"https://updateresultinsheet-uuiv6oge3a-du.a.run.app","serviceAccountEmail":"576536060563-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"updateresultinsheet-00001-waw","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"eventTrigger":{"trigger":"projects/anx-test-faadd/locations/asia-northeast3/triggers/updateresultinsheet-641015","triggerRegion":"asia-northeast3","eventType":"google.cloud.firestore.document.v1.updated","eventFilters":[{"attribute":"database","value":"(default)"},{"attribute":"namespace","value":"(default)"},{"attribute":"document","value":"users/{userId}/results/{docId}","operator":"match-path-pattern"}],"pubsubTopic":"projects/anx-test-faadd/topics/eventarc-asia-northeast3-updateresultinsheet-641015-697","serviceAccountEmail":"576536060563-compute@developer.gserviceaccount.com","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY"},"state":"ACTIVE","updateTime":"2025-05-07T05:50:04.964642391Z","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"30c84347c809ea125027c3c981fc032f5b9979f8"},"environment":"GEN_2","url":"https://asia-northeast3-anx-test-faadd.cloudfunctions.net/updateResultInSheet","satisfiesPzs":true,"createTime":"2025-05-07T05:49:14.132481478Z","satisfiesPzi":true}]}
+[debug] [2025-05-07T06:25:02.305Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.305Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.305Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.305Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.305Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/anx-test-faadd/databases/(default) [none]
+[debug] [2025-05-07T06:25:02.306Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/anx-test-faadd/databases/(default) [none]
+[debug] [2025-05-07T06:25:02.445Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/anx-test-faadd/databases/(default) 200
+[debug] [2025-05-07T06:25:02.445Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/anx-test-faadd/databases/(default) {"name":"projects/anx-test-faadd/databases/(default)","uid":"21cc0d1d-25ea-4102-9dca-289db04539f3","createTime":"2025-04-24T14:55:15.793825Z","updateTime":"2025-04-24T14:55:15.793825Z","locationId":"asia-northeast3","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2025-05-07T05:25:02.443706Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"v","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"etag":"IOLew9jckI0DMMjt0Mj28IwD"}
+[debug] [2025-05-07T06:25:02.521Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/anx-test-faadd/databases/(default) 200
+[debug] [2025-05-07T06:25:02.521Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/anx-test-faadd/databases/(default) {"name":"projects/anx-test-faadd/databases/(default)","uid":"21cc0d1d-25ea-4102-9dca-289db04539f3","createTime":"2025-04-24T14:55:15.793825Z","updateTime":"2025-04-24T14:55:15.793825Z","locationId":"asia-northeast3","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2025-05-07T05:25:02.519935Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"v","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"etag":"IOiyyNjckI0DMMjt0Mj28IwD"}
+[info] i  functions: ensuring required API run.googleapis.com is enabled... 
+[debug] [2025-05-07T06:25:02.522Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.522Z] Checked if tokens are valid: true, expires at: 1746602405518
+[info] i  functions: ensuring required API eventarc.googleapis.com is enabled... 
+[debug] [2025-05-07T06:25:02.522Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.522Z] Checked if tokens are valid: true, expires at: 1746602405518
+[info] i  functions: ensuring required API pubsub.googleapis.com is enabled... 
+[debug] [2025-05-07T06:25:02.523Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.523Z] Checked if tokens are valid: true, expires at: 1746602405518
+[info] i  functions: ensuring required API storage.googleapis.com is enabled... 
+[debug] [2025-05-07T06:25:02.523Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.523Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:02.523Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/run.googleapis.com [none]
+[debug] [2025-05-07T06:25:02.523Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/run.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:25:02.523Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/eventarc.googleapis.com [none]
+[debug] [2025-05-07T06:25:02.523Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/eventarc.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:25:02.524Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/pubsub.googleapis.com [none]
+[debug] [2025-05-07T06:25:02.524Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/pubsub.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:25:02.524Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/storage.googleapis.com [none]
+[debug] [2025-05-07T06:25:02.524Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/storage.googleapis.com x-goog-quota-user=projects/anx-test-faadd
+[debug] [2025-05-07T06:25:02.872Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/run.googleapis.com 200
+[debug] [2025-05-07T06:25:02.872Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/run.googleapis.com [omitted]
+[info] ✔  functions: required API run.googleapis.com is enabled 
+[debug] [2025-05-07T06:25:03.843Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/storage.googleapis.com 200
+[debug] [2025-05-07T06:25:03.843Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/storage.googleapis.com [omitted]
+[info] ✔  functions: required API storage.googleapis.com is enabled 
+[debug] [2025-05-07T06:25:03.854Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/eventarc.googleapis.com 200
+[debug] [2025-05-07T06:25:03.854Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/eventarc.googleapis.com [omitted]
+[info] ✔  functions: required API eventarc.googleapis.com is enabled 
+[debug] [2025-05-07T06:25:03.859Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/pubsub.googleapis.com 200
+[debug] [2025-05-07T06:25:03.860Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/anx-test-faadd/services/pubsub.googleapis.com [omitted]
+[info] ✔  functions: required API pubsub.googleapis.com is enabled 
+[info] i  functions: generating the service identity for pubsub.googleapis.com... 
+[debug] [2025-05-07T06:25:03.860Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:03.861Z] Checked if tokens are valid: true, expires at: 1746602405518
+[info] i  functions: generating the service identity for eventarc.googleapis.com... 
+[debug] [2025-05-07T06:25:03.861Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:03.861Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:03.861Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/576536060563/services/pubsub.googleapis.com:generateServiceIdentity [none]
+[debug] [2025-05-07T06:25:03.861Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/576536060563/services/eventarc.googleapis.com:generateServiceIdentity [none]
+[debug] [2025-05-07T06:25:04.286Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/576536060563/services/pubsub.googleapis.com:generateServiceIdentity 200
+[debug] [2025-05-07T06:25:04.287Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/576536060563/services/pubsub.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-576536060563@gcp-sa-pubsub.iam.gserviceaccount.com","uniqueId":"117676624980113256801"}}
+[debug] [2025-05-07T06:25:05.117Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/576536060563/services/eventarc.googleapis.com:generateServiceIdentity 200
+[debug] [2025-05-07T06:25:05.117Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/576536060563/services/eventarc.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-576536060563@gcp-sa-eventarc.iam.gserviceaccount.com","uniqueId":"107971091068363529412"}}
+[debug] [2025-05-07T06:25:05.120Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:05.120Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:05.120Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd [none]
+[debug] [2025-05-07T06:25:06.129Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd 200
+[debug] [2025-05-07T06:25:06.129Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/anx-test-faadd {"projectNumber":"576536060563","projectId":"anx-test-faadd","lifecycleState":"ACTIVE","name":"anx-test-app","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-04-24T14:49:50.207391Z"}
+[debug] [2025-05-07T06:25:06.130Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:06.130Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:06.130Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/anx-test-faadd/billingInfo [none]
+[debug] [2025-05-07T06:25:06.551Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/anx-test-faadd/billingInfo 200
+[debug] [2025-05-07T06:25:06.551Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/anx-test-faadd/billingInfo {"name":"projects/anx-test-faadd/billingInfo","projectId":"anx-test-faadd","billingAccountName":"billingAccounts/0157DB-A09F34-91010C","billingEnabled":true}
+[info] i  functions: Skipping the deploy of unchanged functions. 
+[info] ✔  functions[saveResultToSheet(asia-northeast3)] Skipped (No changes detected) 
+[info] ✔  functions[updateResultInSheet(asia-northeast3)] Skipped (No changes detected) 
+[debug] [2025-05-07T06:25:06.555Z] Total Function Deployment time: 0
+[debug] [2025-05-07T06:25:06.555Z] 0 Functions Deployed
+[debug] [2025-05-07T06:25:06.555Z] 0 Functions Errored
+[debug] [2025-05-07T06:25:06.555Z] 0 Function Deployments Aborted
+[debug] [2025-05-07T06:25:06.555Z] Average Function Deployment time: NaN
+[debug] [2025-05-07T06:25:06.782Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:06.782Z] Checked if tokens are valid: true, expires at: 1746602405518
+[debug] [2025-05-07T06:25:06.782Z] >>> [apiv2][query] GET https://artifactregistry.googleapis.com/v1/projects/anx-test-faadd/locations/asia-northeast3/repositories/gcf-artifacts [none]
+[debug] [2025-05-07T06:25:07.236Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/anx-test-faadd/locations/asia-northeast3/repositories/gcf-artifacts 200
+[debug] [2025-05-07T06:25:07.236Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/anx-test-faadd/locations/asia-northeast3/repositories/gcf-artifacts {"name":"projects/anx-test-faadd/locations/asia-northeast3/repositories/gcf-artifacts","format":"DOCKER","description":"This repository is created and used by Cloud Functions for storing function docker images.","labels":{"goog-managed-by":"cloudfunctions"},"createTime":"2025-05-07T05:48:10.538631Z","updateTime":"2025-05-07T05:49:00.836195Z","mode":"STANDARD_REPOSITORY","sizeBytes":"120903954","satisfiesPzs":true,"vulnerabilityScanningConfig":{"lastEnableTime":"2025-05-07T05:47:52.511515126Z","enablementState":"SCANNING_DISABLED","enablementStateReason":"API containerscanning.googleapis.com is not enabled."},"satisfiesPzi":true,"registryUri":"asia-northeast3-docker.pkg.dev/anx-test-faadd/gcf-artifacts"}
+[warn] ⚠  functions: No cleanup policy detected for repositories in asia-northeast3. This may result in a small monthly bill as container images accumulate over time. 

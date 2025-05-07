@@ -1,4 +1,4 @@
-const functions = require('firebase-functions');
+const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { google } = require('googleapis');
 const fs = require('fs');
@@ -110,51 +110,55 @@ async function appendToSheet(data) {
 }
 
 // Firestore 응답 데이터가 생성될 때마다 트리거되는 함수
-exports.saveResultToSheet = functions.firestore
-  .document('responses/{docId}')
-  .onCreate(async (snapshot, context) => {
-    try {
-      const data = snapshot.data();
-      
-      // 필요한 데이터가 모두 존재하는지 확인
-      if (!data.categoryResults || !data.globalResult || !data.baiResult) {
-        console.log('완전한 결과 데이터가 없습니다:', context.params.docId);
-        return null;
-      }
-      
-      // 스프레드시트에 데이터 추가
-      await appendToSheet(data);
-      console.log('검사 결과가 스프레드시트에 성공적으로 저장되었습니다:', context.params.docId);
-      return null;
-    } catch (error) {
-      console.error('결과 저장 중 오류 발생:', error);
+exports.saveResultToSheet = onDocumentCreated({
+  document: '/users/{userId}/results/{docId}',
+  region: 'asia-northeast3',
+  memory: '256MiB'
+}, async (event) => {
+  try {
+    const data = event.data.data();
+    
+    // 필요한 데이터가 모두 존재하는지 확인
+    if (!data.categoryResults || !data.globalResult || !data.baiResult) {
+      console.log('완전한 결과 데이터가 없습니다:', event.params.docId);
       return null;
     }
-  });
+    
+    // 스프레드시트에 데이터 추가
+    await appendToSheet(data);
+    console.log('검사 결과가 스프레드시트에 성공적으로 저장되었습니다:', event.params.docId);
+    return null;
+  } catch (error) {
+    console.error('결과 저장 중 오류 발생:', error);
+    return null;
+  }
+});
 
 // Firestore 응답 데이터가 업데이트될 때마다 트리거되는 함수 (결과가 나중에 업데이트되는 경우 대비)
-exports.updateResultInSheet = functions.firestore
-  .document('responses/{docId}')
-  .onUpdate(async (change, context) => {
-    try {
-      const newData = change.after.data();
-      const oldData = change.before.data();
-      
-      // 결과 데이터가 새로 추가된 경우에만 처리
-      const hadResultBefore = oldData.categoryResults && oldData.globalResult && oldData.baiResult;
-      const hasResultNow = newData.categoryResults && newData.globalResult && newData.baiResult;
-      
-      if (!hadResultBefore && hasResultNow) {
-        // 스프레드시트에 데이터 추가
-        await appendToSheet(newData);
-        console.log('업데이트된 검사 결과가 스프레드시트에 성공적으로 저장되었습니다:', context.params.docId);
-      } else {
-        console.log('결과 데이터가 없거나 이미 처리되었습니다:', context.params.docId);
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('결과 업데이트 중 오류 발생:', error);
-      return null;
+exports.updateResultInSheet = onDocumentUpdated({
+  document: '/users/{userId}/results/{docId}',
+  region: 'asia-northeast3',
+  memory: '256MiB'
+}, async (event) => {
+  try {
+    const newData = event.data.after.data();
+    const oldData = event.data.before.data();
+    
+    // 결과 데이터가 새로 추가된 경우에만 처리
+    const hadResultBefore = oldData.categoryResults && oldData.globalResult && oldData.baiResult;
+    const hasResultNow = newData.categoryResults && newData.globalResult && newData.baiResult;
+    
+    if (!hadResultBefore && hasResultNow) {
+      // 스프레드시트에 데이터 추가
+      await appendToSheet(newData);
+      console.log('업데이트된 검사 결과가 스프레드시트에 성공적으로 저장되었습니다:', event.params.docId);
+    } else {
+      console.log('결과 데이터가 없거나 이미 처리되었습니다:', event.params.docId);
     }
-  }); 
+    
+    return null;
+  } catch (error) {
+    console.error('결과 업데이트 중 오류 발생:', error);
+    return null;
+  }
+}); 
