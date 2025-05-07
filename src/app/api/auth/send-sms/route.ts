@@ -10,11 +10,10 @@ function normalizePhoneNumber(phone: string): string {
 // HMAC-SHA256 서명 생성
 function generateSignature(apiSecret: string, date: string, salt: string): string {
   const message = `date=${date}\nsalt=${salt}`;
-  const signature = crypto
+  return crypto
     .createHmac('sha256', apiSecret)
     .update(message)
     .digest('base64');
-  return signature;
 }
 
 // SMS 메시지 타입 정의
