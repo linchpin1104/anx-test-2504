@@ -1,5 +1,4 @@
 import { firestore } from '@/lib/firebaseAdmin';
-import { Timestamp } from 'firebase-admin/firestore';
 
 // 인증 코드 저장소 (실제로는 Redis 또는 다른 데이터베이스를 사용해야 함)
 // key: 전화번호, value: {code: 인증코드, expires: 만료시간}
