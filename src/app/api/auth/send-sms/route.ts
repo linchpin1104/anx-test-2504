@@ -110,7 +110,7 @@ export async function POST(request: Request) {
     }
 
     // SMS 발송
-    const message: Message = {
+    const smsMessage = {
       to: normalizedPhone,
       from: senderNumber,
       text: `[더나일] 인증번호는 [${code}] 입니다.`
@@ -141,11 +141,7 @@ export async function POST(request: Request) {
       const signature = generateSignature(apiSecret, date, salt);
 
       const requestBody = {
-        message: {
-          to: normalizedPhone,
-          from: senderNumber,
-          text: `[더나일] 인증번호는 [${code}] 입니다.`
-        }
+        message: smsMessage
       };
 
       console.log('SMS API 요청 준비:', {
