@@ -10,6 +10,11 @@ interface FormValues {
   code: string;
 }
 
+// 전화번호 형식 정규화
+function normalizePhoneNumber(phone: string): string {
+  return phone.replace(/[^0-9]/g, '');
+}
+
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>();
   const router = useRouter();
@@ -25,11 +30,15 @@ export default function RegisterPage() {
     setSendError('');
     
     try {
+      // 전화번호 정규화
+      const normalizedPhone = normalizePhoneNumber(data.phone);
+      console.log('인증번호 요청:', { original: data.phone, normalized: normalizedPhone });
+
       // 프로덕션 모드에서는 실제 API 호출
       const smsRes = await fetch('/api/auth/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: data.phone }),
+        body: JSON.stringify({ phoneNumber: normalizedPhone }),
       });
       
       // 응답 파싱 시도
@@ -54,7 +63,7 @@ export default function RegisterPage() {
       // 로컬 스토리지에 이름과 전화번호 저장 (다음 단계를 위해)
       if (typeof window !== 'undefined') {
         localStorage.setItem('registerName', data.name);
-        localStorage.setItem('registerPhone', data.phone);
+        localStorage.setItem('registerPhone', normalizedPhone);
       }
       
       setCodeSent(true);
@@ -71,10 +80,21 @@ export default function RegisterPage() {
     setVerifyError('');
     
     try {
+      // 전화번호 정규화
+      const normalizedPhone = normalizePhoneNumber(data.phone);
+      console.log('인증번호 확인:', { 
+        original: data.phone, 
+        normalized: normalizedPhone,
+        code: data.code 
+      });
+
       const res = await fetch('/api/auth/verify-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: data.phone, code: data.code }),
+        body: JSON.stringify({ 
+          phone: normalizedPhone, 
+          code: data.code 
+        }),
       });
       
       // 응답 파싱 시도
@@ -90,7 +110,7 @@ export default function RegisterPage() {
         // 인증 성공 시 기본정보 페이지로 이동
         router.push('/register/basic-info');
       } else {
-        setVerifyError('인증번호가 일치하지 않습니다.');
+        setVerifyError(json.message || '인증번호가 일치하지 않습니다.');
       }
     } catch (error) {
       console.error('인증 확인 오류:', error);
