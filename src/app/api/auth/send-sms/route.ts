@@ -7,6 +7,11 @@ function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// 전화번호 형식 정규화
+function normalizePhoneNumber(phone: string): string {
+  return phone.replace(/[^0-9]/g, '');
+}
+
 export async function POST(request: Request) {
   try {
     // 요청 데이터 파싱 및 유효성 검사
@@ -32,14 +37,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const formattedPhoneNumber = phoneNumber.replace(/-/g, '');
+    // 전화번호 정규화
+    const normalizedPhone = normalizePhoneNumber(phoneNumber);
+    console.log('전화번호 정규화:', { original: phoneNumber, normalized: normalizedPhone });
+
+    // 인증번호 생성 및 저장
     const verificationCode = generateVerificationCode();
     const message = `[더나일] 인증번호는 [${verificationCode}] 입니다.`;
     
     // 인증 코드 저장 (5분 유효)
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 5);
-    await setVerificationCode(formattedPhoneNumber, verificationCode, expiresAt);
+    
+    console.log('인증번호 저장 시도:', {
+      phone: normalizedPhone,
+      code: verificationCode,
+      expiresAt: expiresAt.toISOString()
+    });
+    
+    await setVerificationCode(normalizedPhone, verificationCode, expiresAt);
     
     // 환경 변수 확인
     const apiKey = process.env.SOLAPI_API_KEY;
@@ -63,13 +79,13 @@ export async function POST(request: Request) {
     
     // SMS 메시지 발송
     console.log('SMS 발송 시도:', {
-      to: formattedPhoneNumber,
+      to: normalizedPhone,
       from: senderNumber,
       messageLength: message.length
     });
     
     const result = await messageService.sendOne({
-      to: formattedPhoneNumber,
+      to: normalizedPhone,
       from: senderNumber,
       text: message
     });
@@ -78,7 +94,8 @@ export async function POST(request: Request) {
     if (result && result.statusCode === '2000') {
       console.log('SMS 발송 성공:', {
         messageId: result.messageId,
-        statusCode: result.statusCode
+        statusCode: result.statusCode,
+        phone: normalizedPhone
       });
       return NextResponse.json({
         success: true,
@@ -88,7 +105,8 @@ export async function POST(request: Request) {
       console.error('SMS 발송 실패:', {
         result,
         statusCode: result?.statusCode,
-        messageId: result?.messageId
+        messageId: result?.messageId,
+        phone: normalizedPhone
       });
       return NextResponse.json(
         { 

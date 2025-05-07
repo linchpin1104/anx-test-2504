@@ -5,6 +5,11 @@ import { getVerificationCode, deleteVerificationCode } from '@/lib/verificationS
 // 이 구현은 서버 재시작 시 코드가 초기화되므로 실제로는 공유 저장소(Redis 등)를 사용해야 함
 // 이 예시에서는 API 경로가 다른 인스턴스에서 실행될 수 있으므로 외부에서 저장소를 임포트하는 것이 좋음
 
+// 전화번호 형식 정규화
+function normalizePhoneNumber(phone: string): string {
+  return phone.replace(/[^0-9]/g, '');
+}
+
 export async function POST(request: Request) {
   try {
     // 요청 본문에서 전화번호와 코드 추출
@@ -18,16 +23,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // 전화번호 형식 통일 (- 제거)
-    const formattedPhone = phone.replace(/-/g, '');
+    // 전화번호 정규화
+    const normalizedPhone = normalizePhoneNumber(phone);
+    console.log('전화번호 정규화:', { original: phone, normalized: normalizedPhone });
     
     // 인증 코드 확인
-    const verification = await getVerificationCode(formattedPhone);
+    const verification = await getVerificationCode(normalizedPhone);
     
     // 인증 코드가 없거나 만료된 경우
     if (!verification) {
       console.log('인증번호 없음 또는 만료:', {
-        phone: formattedPhone,
+        phone: normalizedPhone,
         receivedCode: code
       });
       return NextResponse.json({ 
@@ -43,12 +49,13 @@ export async function POST(request: Request) {
     // 만료 확인
     if (now > verification.expiresAt) {
       console.log('인증번호 만료:', {
-        phone: formattedPhone,
+        phone: normalizedPhone,
         receivedCode: code,
-        expiresAt: verification.expiresAt
+        expiresAt: verification.expiresAt.toISOString(),
+        currentTime: now.toISOString()
       });
       // 만료된 코드 삭제
-      await deleteVerificationCode(formattedPhone);
+      await deleteVerificationCode(normalizedPhone);
       return NextResponse.json({ 
         success: false, 
         verified: false, 
@@ -59,10 +66,10 @@ export async function POST(request: Request) {
     // 코드 일치 여부 확인
     if (verification.code !== code) {
       console.log('인증번호 불일치:', {
-        phone: formattedPhone,
+        phone: normalizedPhone,
         receivedCode: code,
         expectedCode: verification.code,
-        expiresAt: verification.expiresAt
+        expiresAt: verification.expiresAt.toISOString()
       });
       return NextResponse.json({ 
         success: false, 
@@ -72,7 +79,7 @@ export async function POST(request: Request) {
     }
     
     // 검증 성공 - 사용된 인증 코드 삭제
-    await deleteVerificationCode(formattedPhone);
+    await deleteVerificationCode(normalizedPhone);
     
     // 성공 응답 반환
     return NextResponse.json({
