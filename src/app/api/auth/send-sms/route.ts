@@ -8,8 +8,8 @@ function normalizePhoneNumber(phone: string): string {
 }
 
 // HMAC-SHA256 서명 생성
-function generateSignature(apiSecret: string, date: string, salt: string): string {
-  const message = `date=${date}\nsalt=${salt}`;
+function generateSignature(apiKey: string, apiSecret: string, date: string, salt: string): string {
+  const message = `date=${date}\nsalt=${salt}\napiKey=${apiKey}`;
   return crypto
     .createHmac('sha256', apiSecret)
     .update(message)
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       // 프로덕션 환경에서는 실제 SMS 발송
       const date = new Date().toISOString();
       const salt = Math.random().toString(36).substring(7);
-      const signature = generateSignature(apiSecret, date, salt);
+      const signature = generateSignature(apiKey, apiSecret, date, salt);
 
       const requestBody = {
         message: smsMessage
