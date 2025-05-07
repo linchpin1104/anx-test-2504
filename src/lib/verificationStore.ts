@@ -24,7 +24,8 @@ export async function setVerificationCode(phone: string, code: string, expiresAt
     console.log('인증번호 저장:', {
       phone,
       code,
-      expiresAt: expiresAt.toISOString()
+      expiresAt: expiresAt.toISOString(),
+      createdAt: new Date().toISOString()
     });
     
     await firestore.collection('verifications').doc(phone).set(data);
@@ -53,15 +54,22 @@ export async function getVerificationCode(phone: string): Promise<VerificationDa
       return undefined;
     }
 
+    // 타임스탬프를 Date 객체로 변환
+    const expiresAt = data.expiresAt instanceof Timestamp 
+      ? data.expiresAt.toDate()
+      : new Date(data.expiresAt.seconds * 1000);
+
     const verificationData = {
       code: data.code,
-      expiresAt: data.expiresAt.toDate()
+      expiresAt
     };
 
     console.log('인증번호 조회:', {
       phone,
       code: verificationData.code,
-      expiresAt: verificationData.expiresAt.toISOString()
+      expiresAt: verificationData.expiresAt.toISOString(),
+      currentTime: new Date().toISOString(),
+      isExpired: new Date() > expiresAt
     });
 
     return verificationData;

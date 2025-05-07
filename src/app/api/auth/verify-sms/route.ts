@@ -34,7 +34,8 @@ export async function POST(request: Request) {
     if (!verification) {
       console.log('인증번호 없음 또는 만료:', {
         phone: normalizedPhone,
-        receivedCode: code
+        receivedCode: code,
+        currentTime: new Date().toISOString()
       });
       return NextResponse.json({ 
         success: false, 
@@ -51,8 +52,10 @@ export async function POST(request: Request) {
       console.log('인증번호 만료:', {
         phone: normalizedPhone,
         receivedCode: code,
+        expectedCode: verification.code,
         expiresAt: verification.expiresAt.toISOString(),
-        currentTime: now.toISOString()
+        currentTime: now.toISOString(),
+        timeDiff: now.getTime() - verification.expiresAt.getTime()
       });
       // 만료된 코드 삭제
       await deleteVerificationCode(normalizedPhone);
@@ -69,7 +72,9 @@ export async function POST(request: Request) {
         phone: normalizedPhone,
         receivedCode: code,
         expectedCode: verification.code,
-        expiresAt: verification.expiresAt.toISOString()
+        expiresAt: verification.expiresAt.toISOString(),
+        currentTime: now.toISOString(),
+        isExpired: now > verification.expiresAt
       });
       return NextResponse.json({ 
         success: false, 
