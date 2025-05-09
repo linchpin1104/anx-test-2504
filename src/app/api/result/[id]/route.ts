@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { firestore } from '@/lib/firebaseAdmin';
 
+// NextRequest를 다시 가져오고, params를 직접 추출하는 방식으로 변경
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request
 ) {
   try {
-    const resultId = params.id;
+    // URL에서 ID 추출
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const resultId = pathParts[pathParts.length - 1];
     
     if (!resultId) {
       return NextResponse.json(

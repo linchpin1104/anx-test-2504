@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { firestore } from '@/lib/firebaseAdmin';
 
 export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
+  request: Request
 ): Promise<NextResponse> {
   try {
-    const shareId = context.params.id;
+    // URL에서 ID 추출
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const shareId = pathParts[pathParts.length - 1];
     
     if (!shareId) {
       return NextResponse.json(
