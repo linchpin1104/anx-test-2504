@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getVerificationCode, deleteVerificationCode, incrementAttempts } from '@/lib/verificationStore';
 
 // 참조: send-sms 라우트와 동일한 인증 코드 저장소 사용
@@ -17,7 +17,7 @@ function normalizePhoneNumber(phone: string): string {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // 요청 본문에서 전화번호와 코드 추출
     const { phone, code } = await request.json();

@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { firestore } from '@/lib/firebaseAdmin';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // URL에서 사용자 ID (전화번호) 파라미터 추출
-    const url = new URL(request.url);
+    const url = request.nextUrl;
     const userId = url.searchParams.get('userId');
     const limit = parseInt(url.searchParams.get('limit') || '10', 10);
     

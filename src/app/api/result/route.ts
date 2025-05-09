@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { firestore } from '@/lib/firebaseAdmin';
@@ -21,7 +21,7 @@ interface ReportConfig {
   scales: Array<{ categories: string[] }>;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   // Parse request body
   const { answers, userInfo } = await request.json();
   
@@ -191,10 +191,10 @@ export async function POST(request: Request) {
 }
 
 // 사용자별 최신 검사 결과를 불러오는 GET API
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // URL에서 사용자 ID (전화번호) 파라미터 추출
-    const url = new URL(request.url);
+    const url = request.nextUrl;
     const userId = url.searchParams.get('userId');
     
     if (!userId) {

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { setVerificationCode } from '@/lib/verificationStore';
 import crypto from 'crypto';
 
@@ -35,7 +35,7 @@ interface Message {
   text: string;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // 요청 본문 파싱
     let body;
@@ -258,14 +258,9 @@ export async function POST(request: Request) {
     }
 
   } catch (error) {
-    console.error('예상치 못한 오류:', {
-      error: error instanceof Error ? error.message : '알 수 없는 오류',
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-    
+    console.error('API 처리 중 예상치 못한 오류:', error);
     return NextResponse.json(
-      { success: false, message: '인증번호 발송 중 오류가 발생했습니다.' },
+      { success: false, message: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' },
       { status: 500 }
     );
   }

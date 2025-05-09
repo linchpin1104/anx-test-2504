@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { firestore } from '@/lib/firebaseAdmin';
 import * as admin from 'firebase-admin';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { name, phone, childAge, childGender, parentAgeGroup, caregiverType } = await request.json();
     
