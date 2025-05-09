@@ -3,10 +3,10 @@ import { firestore } from '@/lib/firebaseAdmin';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resultId = context.params.id;
+    const resultId = params.id;
     
     if (!resultId) {
       return NextResponse.json(
