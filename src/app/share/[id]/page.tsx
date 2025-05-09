@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, ReactElement } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   RadarChart,
@@ -35,6 +35,14 @@ interface ResultData {
     parentAgeGroup: string;
   };
   createdAt?: { seconds: number; nanoseconds: number };
+}
+
+interface PolarAngleAxisTickProps {
+  x: number;
+  y: number;
+  payload: {
+    value: string;
+  };
 }
 
 export default function SharedResultPage() {
@@ -112,6 +120,42 @@ export default function SharedResultPage() {
   // Tailwind 색상을 차트용 색상으로 변환
   const getTailwindColor = (): string => {
     return '#0ea5e9'; // sky-500 color
+  };
+
+  // 범례에 대한 커스텀 컴포넌트
+  const CustomTick = ({ x, y, payload }: PolarAngleAxisTickProps): ReactElement<SVGGElement> => {
+    const lines = payload.value.split('\n');
+    const isPerfect = payload.value.includes('완벽주의');
+    const isParentRole = payload.value.includes('역할효능감');
+    const isAttachment = payload.value.includes('자녀애착');
+    const isChild = payload.value.includes('자녀염려');
+    const isSocial = payload.value.includes('사회적지지');
+    
+    return (
+      <g transform={`translate(${x},${y})`}>
+        {/* 배경 제거 (투명하게) */}
+        {lines.map((line: string, i: number) => (
+          <text
+            key={i}
+            x={isPerfect ? 0 : 
+               isAttachment ? (20 - 5) : 
+               isParentRole ? 0 : 
+               isSocial ? 0 : 
+               -10}
+            y={isParentRole ? (i * 11 * 1.3) - 10 : 
+               (isChild || isAttachment) ? (i * 11 * 1.3) + 10 + 10 - 5 : 
+               isSocial ? (i * 11 * 1.3) - 10 : 
+               isPerfect ? (i * 11 * 1.3) - 10 :
+               i * 11 * 1.3}
+            textAnchor="middle"
+            fill="#71717a"
+            fontSize={11}
+          >
+            {line}
+          </text>
+        ))}
+      </g>
+    );
   };
 
   if (loading) {
@@ -232,19 +276,33 @@ export default function SharedResultPage() {
               <RadarChart 
                 data={Object.entries(categoryResults)
                   .filter(([cat]) => cat !== 'BAI 불안척도')
-                  .map(([cat, { mean }]) => ({ 
-                    category: cat, 
-                    value: mean 
-                  }))}
+                  .map(([cat, { mean }]) => {
+                    let formattedCategory = cat;
+                    if (cat === '부모역할 효능감으로 인한 불안') {
+                      formattedCategory = '역할효능감\n불안';
+                    } else if (cat === '사회적 지지에 대한 염려') {
+                      formattedCategory = '사회적지지\n불안';
+                    } else if (cat === '자녀에 대한 염려') {
+                      formattedCategory = '자녀염려\n불안';
+                    } else if (cat === '자녀와의 애착에 대한 불안') {
+                      formattedCategory = '자녀애착\n불안';
+                    } else if (cat === '완벽주의로 인한 불안') {
+                      formattedCategory = '완벽주의\n불안';
+                    }
+                    return { 
+                      category: formattedCategory, 
+                      value: mean 
+                    };
+                  })}
                 cx="50%" 
                 cy="50%" 
-                outerRadius="80%"
+                outerRadius="85%"
               >
                 <PolarGrid gridType="polygon" />
                 <PolarAngleAxis 
                   dataKey="category" 
-                  tick={{ fill: '#71717a', fontSize: 13 }}
                   tickLine={false}
+                  tick={CustomTick}
                 />
                 <PolarRadiusAxis 
                   domain={[0, 5]} 

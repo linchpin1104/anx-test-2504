@@ -116,27 +116,27 @@ export default function SurveyResultPage() {
   const CustomTick = ({ x, y, payload }: PolarAngleAxisTickProps): ReactElement<SVGGElement> => {
     const lines = payload.value.split('\n');
     const isPerfect = payload.value.includes('완벽주의');
-    const isParentRole = payload.value.includes('부모역할');
-    const isAttachment = payload.value.includes('애착');
-    const isChild = payload.value.includes('자녀에');
-    const isSocial = payload.value.includes('사회적');
+    const isParentRole = payload.value.includes('역할효능감');
+    const isAttachment = payload.value.includes('자녀애착');
+    const isChild = payload.value.includes('자녀염려');
+    const isSocial = payload.value.includes('사회적지지');
     
     return (
       <g transform={`translate(${x},${y})`}>
-        {/* 하얀색 배경 */}
-        <rect
-          x={isPerfect ? -55 : isAttachment ? -15 : isParentRole ? -35 : -45}
-          y={isParentRole ? -24 : (isChild || isSocial) ? -4 : -14}
-          width={70}
-          height={28}
-          fill="white"
-          opacity={0.9}
-        />
+        {/* 배경 제거 (투명하게) */}
         {lines.map((line: string, i: number) => (
           <text
             key={i}
-            x={isPerfect ? -20 : isAttachment ? 20 : isParentRole ? 0 : -10}
-            y={isParentRole ? (i * 11 * 1.3) - 10 : (isChild || isSocial) ? (i * 11 * 1.3) + 10 : i * 11 * 1.3}
+            x={isPerfect ? 0 : 
+               isAttachment ? (20 - 5) : 
+               isParentRole ? 0 : 
+               isSocial ? 0 : 
+               -10}
+            y={isParentRole ? (i * 11 * 1.3) - 10 : 
+               (isChild || isAttachment) ? (i * 11 * 1.3) + 10 + 10 - 5 : 
+               isSocial ? (i * 11 * 1.3) - 10 : 
+               isPerfect ? (i * 11 * 1.3) - 10 :
+               i * 11 * 1.3}
             textAnchor="middle"
             fill="#71717a"
             fontSize={11}
@@ -214,15 +214,15 @@ export default function SurveyResultPage() {
                   .map(([cat, { mean }]) => {
                     let formattedCategory = cat;
                     if (cat === '부모역할 효능감으로 인한 불안') {
-                      formattedCategory = '부모역할\n효능감으로 인한 불안';
+                      formattedCategory = '역할효능감\n불안';
                     } else if (cat === '사회적 지지에 대한 염려') {
-                      formattedCategory = '사회적 지지에\n대한 염려';
+                      formattedCategory = '사회적지지\n불안';
                     } else if (cat === '자녀에 대한 염려') {
-                      formattedCategory = '자녀에\n대한 염려';
+                      formattedCategory = '자녀염려\n불안';
                     } else if (cat === '자녀와의 애착에 대한 불안') {
-                      formattedCategory = '자녀와의 애착에\n대한 불안';
+                      formattedCategory = '자녀애착\n불안';
                     } else if (cat === '완벽주의로 인한 불안') {
-                      formattedCategory = '완벽주의로\n인한 불안';
+                      formattedCategory = '완벽주의\n불안';
                     }
                     return { 
                       category: formattedCategory, 

@@ -154,7 +154,47 @@ export default function RegisterPage() {
       }
       
       if (json.verified) {
-        // 인증 성공 시 기본정보 페이지로 이동
+        // 사용자 정보 저장
+        if (typeof window !== 'undefined') {
+          // 사용자 정보를 localStorage에 저장
+          const userInfo = {
+            name: data.name,
+            phone: fullPhoneNumber
+          };
+          localStorage.setItem('userInfo', JSON.stringify(userInfo));
+          
+          // 이미 검사 결과가 있는지 확인
+          try {
+            console.log('기존 검사 결과 확인 중...');
+            // 개발 환경에서는 localStorage로 확인
+            if (process.env.NODE_ENV === 'development') {
+              const historyJson = localStorage.getItem('surveyResultHistory');
+              console.log('로컬 이력 데이터:', historyJson);
+              
+              if (historyJson && JSON.parse(historyJson).length > 0) {
+                console.log('기존 검사 이력 있음! 바로 설문조사 페이지로 이동');
+                // 기존 결과가 있으면 설문조사 페이지로 바로 이동
+                router.push('/survey');
+                return;
+              }
+            } else {
+              // 프로덕션에서는 API 호출로 확인
+              const checkHistoryRes = await fetch(`/api/result/user-history?userId=${encodeURIComponent(fullPhoneNumber)}`);
+              const historyData = await checkHistoryRes.json();
+              
+              if (historyData.success && historyData.results && historyData.results.length > 0) {
+                // 기존 결과가 있으면 설문조사 페이지로 바로 이동
+                router.push('/survey');
+                return;
+              }
+            }
+          } catch (historyError) {
+            console.error('이력 확인 오류:', historyError);
+            // 오류가 발생해도 기본 흐름으로 진행
+          }
+        }
+        
+        // 기존 이력이 없는 경우 기본 정보 입력 페이지로 이동
         router.push('/register/basic-info');
       } else {
         setVerifyError(json.message || '인증번호가 일치하지 않습니다.');
