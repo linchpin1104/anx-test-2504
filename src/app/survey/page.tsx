@@ -49,69 +49,140 @@ interface ResultData {
 
 type FormValues = Record<string, string>;
 
+// 에러 타입 정의
+type AppError = {
+  type: ErrorType;
+  message: string;
+  status?: number;
+};
+
 export default function SurveyPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<{ type?: ErrorType; message: string } | null>(null);
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormValues>();
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<AppError | null>(null);
+  const [generalScale, setGeneralScale] = useState<{ value: string; label: string }[]>([]);
+  const [baiScale, setBaiScale] = useState<{ value: string; label: string }[]>([]);
+  const [userInfo, setUserInfo] = useState<{
+    name?: string;
+    phone?: string;
+    childAge?: string;
+    childGender?: string;
+    parentAgeGroup?: string;
+    caregiverType?: string;
+  }>({});
 
-  // Define scale labels for general and BAI questions
-  const generalScale = [
-    { value: 1, label: '그렇지 않다' },
-    { value: 2, label: '별로 그렇지 않다' },
-    { value: 3, label: '약간 그렇다' },
-    { value: 4, label: '그렇다' },
-    { value: 5, label: '매우 그렇다' },
-  ];
-  const baiScale = [
-    { value: 0, label: '전혀 그렇지 않다' },
-    { value: 1, label: '조금 그렇다' },
-    { value: 2, label: '대체로 그렇다' },
-    { value: 3, label: '심각하게 그렇다' },
-  ];
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormValues>();
 
-  // 질문 데이터 로딩
   useEffect(() => {
-    let isMounted = true;
-    setQuestionsLoading(true);
-    setError(null);
-    
-    const fetchQuestions = async () => {
+    // 로컬 스토리지에서 사용자 정보 확인
+    const userInfoStr = localStorage.getItem('userInfo');
+    if (userInfoStr) {
       try {
-        const res = await fetch('/api/questions');
+        const savedUserInfo = JSON.parse(userInfoStr);
+        setUserInfo(savedUserInfo);
         
-        if (!res.ok) {
-          throw await handleApiError(res);
+        // 사용자 정보가 있으면 이전 검사 결과 불러오기 시도
+        if (savedUserInfo.phone) {
+          loadPreviousResult(savedUserInfo.phone);
         }
-        
-        const data: Question[] = await res.json();
-        
-        if (isMounted) {
-          setQuestions(data);
-          setQuestionsLoading(false);
-        }
-      } catch (err) {
-        console.error('질문 로딩 오류:', err);
-        const appError = handleError(err);
-        
-        if (isMounted) {
-          setError({
-            type: appError.type,
-            message: appError.message || '질문을 불러오는데 실패했습니다.'
-          });
-          setQuestionsLoading(false);
-        }
+      } catch (e) {
+        console.error('사용자 정보 파싱 오류:', e);
       }
-    };
+    }
     
+    // 질문 데이터 불러오기
     fetchQuestions();
-    
-    return () => {
-      isMounted = false;
-    };
   }, []);
+  
+  // 이전 검사 결과 불러오기
+  const loadPreviousResult = async (phone: string) => {
+    try {
+      // 이미 로컬 스토리지에 결과가 있는 경우 건너뛰기
+      if (localStorage.getItem('surveyResult')) {
+        return;
+      }
+      
+      const response = await fetch(`/api/result?userId=${encodeURIComponent(phone)}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        // 개발 환경에서는 로컬 스토리지 그대로 사용
+        if (data.useLocalStorage) {
+          console.log('개발 환경: 로컬 스토리지의 결과 데이터 사용');
+          return;
+        }
+        
+        // 서버에서 받은 결과 데이터가 있다면 저장
+        const resultWithUserInfo = {
+          ...data,
+          name: userInfo.name || '',
+          peerReview: [],  // 빈 데이터로 초기화
+          selfReview: [],  // 빈 데이터로 초기화
+          registrationTime: new Date().toISOString(),
+          userInfo
+        };
+        
+        // 로컬 스토리지에 결과 저장
+        localStorage.setItem('surveyResult', JSON.stringify(resultWithUserInfo));
+        console.log('이전 검사 결과를 불러왔습니다:', data.resultId);
+      } else if (data.noResult) {
+        console.log('이전 검사 결과가 없습니다.');
+      }
+    } catch (error) {
+      console.error('이전 결과 불러오기 오류:', error);
+    }
+  };
+
+  const fetchQuestions = async () => {
+    try {
+      setQuestionsLoading(true);
+      
+      const response = await fetch('/api/questions');
+      if (!response.ok) {
+        throw { 
+          type: ErrorType.SERVER,
+          status: response.status,
+          message: `서버 오류: ${response.status} ${response.statusText}`
+        };
+      }
+      
+      const data = await response.json();
+      if (!data.success) {
+        throw { 
+          type: ErrorType.SERVER,
+          message: data.message || '질문을 불러오는데 실패했습니다.'
+        };
+      }
+      
+      setQuestions(data.questions);
+      
+      // 일반 문항용 스케일
+      setGeneralScale([
+        { value: '1', label: '전혀 아니다' },
+        { value: '2', label: '아니다' },
+        { value: '3', label: '보통이다' },
+        { value: '4', label: '그렇다' },
+        { value: '5', label: '매우 그렇다' }
+      ]);
+      
+      // BAI 문항용 스케일
+      setBaiScale([
+        { value: '0', label: '전혀' },
+        { value: '1', label: '조금' },
+        { value: '2', label: '상당히' },
+        { value: '3', label: '심하게' }
+      ]);
+      
+    } catch (err) {
+      console.error('질문 로드 오류:', err);
+      const appError = handleError(err);
+      setError(appError);
+    } finally {
+      setQuestionsLoading(false);
+    }
+  };
 
   // 폼 제출 처리
   const onSubmit = async (data: FormValues) => {
@@ -202,10 +273,7 @@ export default function SurveyPage() {
     } catch (err) {
       console.error('제출 오류:', err);
       const appError = handleError(err);
-      setError({
-        type: appError.type,
-        message: getUserFriendlyErrorMessage(err)
-      });
+      setError(appError);
     } finally {
       setLoading(false);
     }
