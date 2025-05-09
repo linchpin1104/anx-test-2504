@@ -79,22 +79,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // 환경 변수 확인
-    const apiKey = process.env.SOLAPI_API_KEY;
-    const apiSecret = process.env.SOLAPI_API_SECRET;
-    const senderNumber = process.env.SOLAPI_SENDER_NUMBER;
+    // 환경 변수 확인 - 개발 환경에서는 건너뛰기
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    let apiKey, apiSecret, senderNumber;
+    
+    if (!isDevelopment) {
+      apiKey = process.env.SOLAPI_API_KEY;
+      apiSecret = process.env.SOLAPI_API_SECRET;
+      senderNumber = process.env.SOLAPI_SENDER_NUMBER;
 
-    if (!apiKey || !apiSecret || !senderNumber) {
-      console.error('SMS 서비스 설정 누락:', {
-        hasApiKey: !!apiKey,
-        hasApiSecret: !!apiSecret,
-        hasSenderNumber: !!senderNumber,
-        env: process.env.NODE_ENV
-      });
-      return NextResponse.json(
-        { success: false, message: 'SMS 서비스 설정이 누락되었습니다.' },
-        { status: 500 }
-      );
+      if (!apiKey || !apiSecret || !senderNumber) {
+        console.error('SMS 서비스 설정 누락:', {
+          hasApiKey: !!apiKey,
+          hasApiSecret: !!apiSecret,
+          hasSenderNumber: !!senderNumber,
+          env: process.env.NODE_ENV
+        });
+        return NextResponse.json(
+          { success: false, message: 'SMS 서비스 설정이 누락되었습니다.' },
+          { status: 500 }
+        );
+      }
+    } else {
+      // 개발 환경에서는 더미 값 사용
+      console.log('개발 환경: SMS 서비스 설정 검사 건너뜀');
+      apiKey = 'dev_api_key';
+      apiSecret = 'dev_api_secret';
+      senderNumber = 'dev_sender';
     }
 
     // 6자리 랜덤 인증 코드 생성
