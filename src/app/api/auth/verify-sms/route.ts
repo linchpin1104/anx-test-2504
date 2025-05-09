@@ -84,6 +84,25 @@ export async function POST(request: Request) {
     }
     
     // 코드 일치 여부 확인
+    // 개발 환경에서는 "0000"도 항상 허용
+    if (process.env.NODE_ENV === 'development' && code === "0000") {
+      console.log('개발 환경에서 테스트 코드 "0000" 허용:', {
+        phone: normalizedPhone,
+        receivedCode: code,
+        isDev: true
+      });
+      
+      // 기존 코드가 있다면 삭제
+      await deleteVerificationCode(normalizedPhone);
+      
+      // 성공 응답 반환
+      return NextResponse.json({
+        success: true,
+        verified: true,
+        message: '인증이 완료되었습니다. (개발 환경)'
+      });
+    }
+    
     if (verification.code !== code) {
       console.log('인증번호 불일치:', {
         phone: normalizedPhone,

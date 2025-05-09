@@ -98,10 +98,15 @@ export async function POST(request: Request) {
     }
 
     // 6자리 랜덤 인증 코드 생성
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // 개발 환경에서는 "0000"으로 고정, 프로덕션에서는 랜덤 코드 사용
+    const code = process.env.NODE_ENV === 'development' 
+      ? "0000" 
+      : Math.floor(100000 + Math.random() * 900000).toString();
+      
     console.log('인증번호 생성:', {
       phone: normalizedPhone,
       code,
+      isDev: process.env.NODE_ENV === 'development',
       timestamp: new Date().toISOString()
     });
 
