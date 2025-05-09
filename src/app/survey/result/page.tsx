@@ -394,10 +394,43 @@ export default function SurveyResultPage() {
                 // 공유 URL 생성
                 const shareUrl = `${window.location.origin}${data.shareUrl}`;
                 
-                // 클립보드에 복사
-                await navigator.clipboard.writeText(shareUrl);
-                
-                alert('링크가 클립보드에 복사되었습니다.\n이 링크를 공유하여 검사 결과를 다른 사람들과 공유할 수 있습니다.');
+                // 클립보드에 복사 (크로스 브라우저 지원)
+                try {
+                  // 기본 Clipboard API 사용 시도
+                  await navigator.clipboard.writeText(shareUrl);
+                  alert('링크가 클립보드에 복사되었습니다.\n이 링크를 공유하여 검사 결과를 다른 사람들과 공유할 수 있습니다.');
+                } catch (clipboardError) {
+                  // 대체 방법: 임시 텍스트 필드 생성하여 복사
+                  const textArea = document.createElement('textarea');
+                  textArea.value = shareUrl;
+                  
+                  // 화면 밖으로 숨김
+                  textArea.style.position = 'fixed';
+                  textArea.style.left = '-999999px';
+                  textArea.style.top = '-999999px';
+                  document.body.appendChild(textArea);
+                  
+                  // 모바일에서도 작동하도록 focus 및 select
+                  textArea.focus();
+                  textArea.select();
+                  
+                  let copied = false;
+                  try {
+                    // execCommand는 deprecated되었지만 일부 모바일 브라우저에서는 여전히 필요
+                    copied = document.execCommand('copy');
+                  } catch (e) {
+                    console.error('클립보드 복사 실패:', e);
+                  }
+                  
+                  document.body.removeChild(textArea);
+                  
+                  if (copied) {
+                    alert('링크가 클립보드에 복사되었습니다.\n이 링크를 공유하여 검사 결과를 다른 사람들과 공유할 수 있습니다.');
+                  } else {
+                    // 모든 방법 실패 시 사용자에게 URL 보여주기
+                    prompt('아래 링크를 복사하여 공유하세요:', shareUrl);
+                  }
+                }
               } catch (error) {
                 console.error('결과 공유 중 오류 발생:', error);
                 alert('결과 공유 중 오류가 발생했습니다. 다시 시도해주세요.');
