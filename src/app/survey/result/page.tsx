@@ -399,7 +399,8 @@ export default function SurveyResultPage() {
                   // 기본 Clipboard API 사용 시도
                   await navigator.clipboard.writeText(shareUrl);
                   alert('링크가 클립보드에 복사되었습니다.\n이 링크를 공유하여 검사 결과를 다른 사람들과 공유할 수 있습니다.');
-                } catch (clipboardError) {
+                } catch (error) {
+                  console.error('Clipboard API failed:', error);
                   // 대체 방법: 임시 텍스트 필드 생성하여 복사
                   const textArea = document.createElement('textarea');
                   textArea.value = shareUrl;
