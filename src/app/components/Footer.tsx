@@ -16,7 +16,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="inline-flex justify-start items-center gap-2 mt-2">
-        <a href="https://www.instagram.com/thenile_official" target="_blank" rel="noopener noreferrer" className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
+        <a href="https://www.instagram.com/thenile_pacer/" target="_blank" rel="noopener noreferrer" className="size-8 rounded-full outline outline-1 outline-neutral-200 flex justify-center items-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
             <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
