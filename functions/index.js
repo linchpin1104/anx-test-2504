@@ -10,7 +10,8 @@ admin.initializeApp();
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const SHEET_ID = '1Nfq8Ydkrsja-hD_oO33ySWFZ_fD2hChCl_a3ZQj-F08'; // 실제 스프레드시트 ID로 변경
 const KEY_FILE_PATH = path.join(__dirname, 'serviceAccountKey.json');
-const API_KEY = 'AIzaSyDDY6GqkWIlruHfttOUhFbcn17epYaPryU'; // Google API 키 추가
+// Google API 키를 환경 변수로 이동
+const API_KEY = process.env.GOOGLE_API_KEY;
 
 // 서비스 계정 키 파일을 사용한 인증
 async function getAuthToken() {
