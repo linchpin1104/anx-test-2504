@@ -87,16 +87,18 @@ export default function BasicInfoPage() {
       const name = safeGetItem('registerName');
       const phone = safeGetItem('registerPhone');
       
-      // 마케팅 수신 동의 정보 가져오기
+      // 마케팅 수신 동의 정보와 개인정보 활용동의 정보 가져오기
       let marketingAgreed = false;
+      let privacyAgreed = false;
       try {
         const userInfoStr = localStorage.getItem('userInfo');
         if (userInfoStr) {
           const userInfo = JSON.parse(userInfoStr);
           marketingAgreed = userInfo.marketingAgreed || false;
+          privacyAgreed = userInfo.privacyAgreed || false;
         }
       } catch (e) {
-        console.error('마케팅 수신 동의 정보 가져오기 실패:', e);
+        console.error('사용자 동의 정보 가져오기 실패:', e);
       }
       
       // API로 서버에 데이터 저장
@@ -110,7 +112,9 @@ export default function BasicInfoPage() {
           childGender: data.childGender,
           parentAgeGroup: data.parentAgeGroup,
           caregiverType: data.caregiverType,
-          marketingAgreed
+          region: data.region,
+          marketingAgreed,
+          privacyAgreed
         })
       });
       

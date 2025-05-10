@@ -4,7 +4,7 @@ import * as admin from 'firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, phone, childAge, childGender, parentAgeGroup, caregiverType, marketingAgreed } = await request.json();
+    const { name, phone, childAge, childGender, parentAgeGroup, caregiverType, marketingAgreed, region, privacyAgreed } = await request.json();
     
     // Validate required fields
     if (!name || !phone || !childAge || !childGender || !parentAgeGroup || !caregiverType) {
@@ -17,6 +17,12 @@ export async function POST(request: NextRequest) {
     // Check if we're in development mode
     const isDevelopment = process.env.NODE_ENV === 'development';
     
+    // Log request for debugging
+    console.log('[member] API request data:', {
+      name, phone, childAge, childGender, parentAgeGroup, caregiverType,
+      marketingAgreed, region, privacyAgreed
+    });
+    
     // Save user info in Firestore
     if (firestore && typeof firestore.collection === 'function') {
       try {
@@ -28,9 +34,13 @@ export async function POST(request: NextRequest) {
           childGender,
           parentAgeGroup,
           caregiverType,
+          region: region || '',  // Include region data
           marketingAgreed: marketingAgreed || false, // Default to false if not provided
+          privacyAgreed: privacyAgreed || false, // Default to false if not provided
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        
+        console.log('[member] User data saved to Firestore:', phone);
       } catch (firestoreError) {
         console.error('[member] Firestore error:', firestoreError);
         

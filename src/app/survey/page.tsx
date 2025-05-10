@@ -65,7 +65,10 @@ export default function SurveyPage() {
     childGender?: string;
     parentAgeGroup?: string;
     caregiverType?: string;
-  }>({});
+    region?: string;
+    marketingAgreed: boolean;
+    privacyAgreed: boolean;
+  }>({ marketingAgreed: false, privacyAgreed: false });
   const [historyResults, setHistoryResults] = useState<HistoryResult[]>([]);
   const [showSelectionModal, setShowSelectionModal] = useState(false);
 
@@ -342,9 +345,13 @@ export default function SurveyPage() {
         childGender: safeGetItem('childGender'),
         parentAgeGroup: safeGetItem('parentAgeGroup'),
         caregiverType: safeGetItem('caregiverType'),
+        region: safeGetItem('region'),
         marketingAgreed: localStorage.getItem('userInfo') ? 
           JSON.parse(localStorage.getItem('userInfo') || '{}').marketingAgreed || false : 
           false,
+        privacyAgreed: localStorage.getItem('userInfo') ? 
+          JSON.parse(localStorage.getItem('userInfo') || '{}').privacyAgreed || false : 
+          false
       };
       
       // 필수 사용자 정보 확인
