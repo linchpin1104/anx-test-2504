@@ -9,6 +9,8 @@ interface FormValues {
   countryCode: string;
   phone: string;
   code: string;
+  privacyAgreed: boolean;
+  marketingAgreed: boolean;
 }
 
 // 전화번호 형식 정규화
@@ -33,7 +35,9 @@ const countryCodes = [
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormValues>({
     defaultValues: {
-      countryCode: '+82' // 기본값으로 한국 국가코드 설정
+      countryCode: '+82', // 기본값으로 한국 국가코드 설정
+      privacyAgreed: false,
+      marketingAgreed: false
     }
   });
   const router = useRouter();
@@ -46,6 +50,10 @@ export default function RegisterPage() {
 
   // 현재 선택된 국가코드 감시
   const selectedCountryCode = watch('countryCode');
+
+  // 현재 체크박스 값 감시
+  const privacyAgreed = watch('privacyAgreed');
+  const marketingAgreed = watch('marketingAgreed');
 
   const onSendCode = async (data: FormValues) => {
     setSending(true);
@@ -116,6 +124,13 @@ export default function RegisterPage() {
     setVerifyError('');
     
     try {
+      // 개인정보 동의 여부 확인
+      if (!data.privacyAgreed) {
+        setVerifyError('개인정보 수집 및 활용에 동의해주세요.');
+        setVerifying(false);
+        return;
+      }
+      
       // 전화번호 정규화
       const normalizedPhone = normalizePhoneNumber(data.phone);
       // 국가코드와 전화번호 결합
@@ -127,6 +142,8 @@ export default function RegisterPage() {
         normalized: normalizedPhone,
         fullPhoneNumber,
         code: data.code,
+        privacyAgreed: data.privacyAgreed,
+        marketingAgreed: data.marketingAgreed,
         timestamp: new Date().toISOString()
       });
 
@@ -159,7 +176,9 @@ export default function RegisterPage() {
           // 사용자 정보를 localStorage에 저장
           const userInfo = {
             name: data.name,
-            phone: fullPhoneNumber
+            phone: fullPhoneNumber,
+            privacyAgreed: data.privacyAgreed,
+            marketingAgreed: data.marketingAgreed
           };
           localStorage.setItem('userInfo', JSON.stringify(userInfo));
           
@@ -305,6 +324,48 @@ export default function RegisterPage() {
           </div>
         )}
         
+        {/* 개인정보 수집 및 마케팅 수신 동의 (인증번호 입력 후 표시) */}
+        {codeSent && (
+          <div className="w-full px-5 bg-white flex flex-col justify-start items-start gap-3 overflow-hidden">
+            <div className="w-full flex flex-col space-y-2 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              {/* 개인정보 수집 및 활용 동의 */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="privacyAgreed"
+                  {...register('privacyAgreed', { required: true })}
+                  className="h-4 w-4 text-sky-500 focus:ring-sky-400 border-gray-300 rounded"
+                />
+                <label htmlFor="privacyAgreed" className="ml-2 text-sm font-medium text-gray-900 flex items-center">
+                  <span>개인정보 수집 및 활용에 동의합니다</span>
+                  <span className="text-red-500 text-sm ml-1">*</span>
+                </label>
+              </div>
+              {errors.privacyAgreed && (
+                <p className="text-red-600 text-xs">개인정보 수집 및 활용에 동의해주세요</p>
+              )}
+
+              {/* 마케팅 수신 동의 */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="marketingAgreed"
+                  {...register('marketingAgreed')}
+                  className="h-4 w-4 text-sky-500 focus:ring-sky-400 border-gray-300 rounded"
+                />
+                <label htmlFor="marketingAgreed" className="ml-2 text-sm font-medium text-gray-900">
+                  마케팅 정보 수신에 동의합니다 (선택)
+                </label>
+              </div>
+              
+              <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-100 rounded">
+                수집된 개인정보는 서비스 제공 및 개선, 새로운 서비스 안내, 이벤트 정보 제공 등을 위해 활용됩니다. 
+                개인정보는 회원 탈퇴 시 즉시 파기됩니다.
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* 버튼 */}
         <div className="w-full h-28 px-5 flex flex-col justify-start items-center gap-5 mt-4">
           {!codeSent ? (
@@ -346,7 +407,7 @@ export default function RegisterPage() {
                     </svg>
                     확인중...
                   </span>
-                ) : '인증번호 확인'}
+                ) : '입장하기'}
               </button>
               {verifyError && (
                 <div className="w-full p-3 bg-red-100 border border-red-400 text-red-700 rounded">
