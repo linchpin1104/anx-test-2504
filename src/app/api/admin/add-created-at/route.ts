@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { firestore } from '@/lib/firebaseAdmin';
 import * as admin from 'firebase-admin';
 
-// This is an admin-only endpoint that updates all users to have marketingAgreed and privacyAgreed set to true
+// Admin endpoint to add createdAt field to users who don't have it
 export async function GET(request: NextRequest) {
   try {
-    // Simple security check - using a secret key
+    // Security check - using a secret key
     const url = request.nextUrl;
     const adminKey = url.searchParams.get('key');
     
-    // Check if admin key is provided and valid
+    // Check admin key
     if (!adminKey || adminKey !== process.env.ADMIN_API_KEY) {
       return NextResponse.json(
         { success: false, message: '인증에 실패했습니다.' },
@@ -22,17 +22,17 @@ export async function GET(request: NextRequest) {
       console.log('[ADMIN] 개발 환경에서는 실제 데이터가 변경되지 않습니다.');
       return NextResponse.json({
         success: true,
-        message: '개발 환경: 모든 사용자의 동의 항목이 업데이트된 것으로 처리됨 (시뮬레이션)',
+        message: '개발 환경: 모든 사용자에게 createdAt 필드 추가 시뮬레이션',
         usersUpdated: 0
       });
     }
     
-    // Check if Firestore is initialized
+    // Check Firestore
     if (!firestore || typeof firestore.collection !== 'function') {
       throw new Error('Firestore가 초기화되지 않았습니다.');
     }
     
-    // Get all users from the users collection
+    // Get all users
     const usersRef = firestore.collection('users');
     const usersSnapshot = await usersRef.get();
     
@@ -44,45 +44,51 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Update all users
+    // Update users without createdAt field
     const batch = firestore.batch();
-    let usersCount = 0;
+    let usersUpdated = 0;
+    let usersSkipped = 0;
     
     usersSnapshot.forEach(doc => {
-      const userRef = firestore.collection('users').doc(doc.id);
       const userData = doc.data();
       
-      // Prepare update data
-      const updateData: any = {
-        marketingAgreed: true,
-        privacyAgreed: true,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      };
-      
-      // Add createdAt field if it doesn't exist
+      // Only update users without createdAt field
       if (!userData.createdAt) {
-        console.log(`[ADMIN] 사용자 ${doc.id}에 createdAt 필드 추가`);
-        updateData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+        const userRef = firestore.collection('users').doc(doc.id);
+        batch.update(userRef, {
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        usersUpdated++;
+      } else {
+        usersSkipped++;
       }
-      
-      batch.update(userRef, updateData);
-      
-      usersCount++;
     });
+    
+    // If no users need updating
+    if (usersUpdated === 0) {
+      return NextResponse.json({
+        success: true,
+        message: '모든 사용자에게 이미 createdAt 필드가 있습니다.',
+        usersUpdated: 0,
+        usersSkipped
+      });
+    }
     
     // Commit the batch
     await batch.commit();
     
-    console.log(`[ADMIN] ${usersCount}명의 사용자 동의 항목이 업데이트되었습니다.`);
+    console.log(`[ADMIN] ${usersUpdated}명의 사용자에게 createdAt 필드가 추가되었습니다. (${usersSkipped}명은 이미 있음)`);
     
     return NextResponse.json({
       success: true,
-      message: `${usersCount}명의 사용자 동의 항목이 업데이트되었습니다.`,
-      usersUpdated: usersCount
+      message: `${usersUpdated}명의 사용자에게 createdAt 필드가 추가되었습니다.`,
+      usersUpdated,
+      usersSkipped
     });
     
   } catch (error) {
-    console.error('[ADMIN] 사용자 업데이트 오류:', error);
+    console.error('[ADMIN] createdAt 필드 추가 오류:', error);
     
     return NextResponse.json(
       { 
