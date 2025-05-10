@@ -2,18 +2,20 @@ import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
 // Firebase Admin SDK는 제거합니다
 
-// Edge Runtime 선언을 제거하고 기본 Node.js 런타임 사용
+// Set the proper runtime for OG image generation
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: NextRequest) {
   try {
-    // URL 파라미터 처리 주석 처리 (ESLint 경고 제거)
-    // const { searchParams } = new URL(request.url);
-    // const id = searchParams.get('id');
-
-    // ID가 없거나, 모든 케이스에 대해 기본 이미지 반환
-    // Firestore 의존성을 제거하고 정적 이미지만 생성
+    // Get ID from URL params
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    
+    console.log('Generating OG image for ID:', id);
+    
+    // Generate a static image regardless of ID
     return new ImageResponse(
       (
         <div
