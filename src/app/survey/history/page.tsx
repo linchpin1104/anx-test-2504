@@ -4,12 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-interface CategoryResult {
-  mean: number;
-  label: string;
-  description: string;
-}
-
 interface HistoryResult {
   id: string;
   timestamp: string | null;
