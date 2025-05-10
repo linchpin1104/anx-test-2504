@@ -43,11 +43,12 @@ export async function GET(request: NextRequest) {
               borderRadius: '0 0 0 100%',
               background: '#f0f9ff',
               opacity: 0.7,
+              display: 'flex',
             }}
           />
 
           {/* 헤더 */}
-          <div style={{ fontSize: 70, fontWeight: 'bold', marginBottom: 20 }}>
+          <div style={{ fontSize: 70, fontWeight: 'bold', marginBottom: 20, display: 'flex' }}>
             <span style={{ color: '#0ea5e9' }}>양육불안도</span> 검사 결과
           </div>
 
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
             borderRadius: 20,
             marginTop: 20,
           }}>
-            <div style={{ fontSize: 50, marginBottom: 20 }}>
+            <div style={{ fontSize: 50, marginBottom: 20, display: 'flex' }}>
               나의 양육불안 측정 결과
             </div>
             
@@ -92,13 +93,14 @@ export async function GET(request: NextRequest) {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <div style={{ fontSize: 24, marginBottom: 10, textAlign: 'center' }}>
+                <div style={{ fontSize: 24, marginBottom: 10, textAlign: 'center', display: 'flex' }}>
                   양육불안 분석
                 </div>
                 <div style={{ 
                   fontSize: 26, 
                   color: '#0284c7',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  display: 'flex'
                 }}>
                   상세결과 확인
                 </div>
@@ -114,7 +116,9 @@ export async function GET(request: NextRequest) {
             right: 50,
             textAlign: 'center',
             fontSize: 24,
-            color: '#6b7280'
+            color: '#6b7280',
+            display: 'flex',
+            justifyContent: 'center'
           }}>
             상세한 결과를 확인하려면 링크를 클릭하세요
           </div>
@@ -134,19 +138,19 @@ export async function GET(request: NextRequest) {
         <div
           style={{
             display: 'flex',
+            flexDirection: 'column',
             fontSize: 60,
             color: 'black',
             background: 'white',
             width: '100%',
             height: '100%',
-            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             padding: 50,
           }}
         >
-          <div style={{ fontWeight: 'bold' }}>양육불안도 검사</div>
-          <div style={{ fontSize: 30, marginTop: 30 }}>
+          <div style={{ fontWeight: 'bold', display: 'flex' }}>양육불안도 검사</div>
+          <div style={{ fontSize: 30, marginTop: 30, display: 'flex' }}>
             나의 양육불안 측정 결과
           </div>
         </div>
