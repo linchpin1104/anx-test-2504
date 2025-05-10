@@ -10,6 +10,7 @@ import {
   Radar,
   ResponsiveContainer,
 } from 'recharts';
+import Link from 'next/link';
 
 interface CategoryResult {
   mean: number;
@@ -41,6 +42,8 @@ interface ResultData {
     parentAgeGroup: string;
     caregiverType: string;
   };
+  isHistory?: boolean;
+  timestamp?: string;
 }
 
 interface PolarAngleAxisTickProps {
@@ -153,6 +156,11 @@ export default function SurveyResultPage() {
       {/* Title container */}
       <div className="w-full px-5 pt-8 pb-5 flex flex-col justify-start items-start gap-3">
         <div className="self-stretch justify-start text-black text-xl md:text-2xl font-bold font-['Pretendard_Variable'] leading-relaxed">나의 양육불안지수 보고서</div>
+        {resultData.isHistory && (
+          <div className="self-stretch px-2 py-1 bg-sky-100 rounded-md text-sky-700 text-sm font-medium">
+            이전 검사 결과 ({new Date(resultData.timestamp || resultData.registrationTime).toLocaleDateString('ko-KR')})
+          </div>
+        )}
       </div>
 
       {/* Alert box */}
@@ -448,42 +456,17 @@ export default function SurveyResultPage() {
           </button>
         </div>
         
-        {/* 이전 검사 결과 조회 버튼 - 임시로 숨김 처리 */}
-        {/* <div className="self-stretch px-5 pb-4">
-          <button 
-            onClick={() => {
-              const historyJson = localStorage.getItem('surveyResultHistory') || '[]';
-              const history = JSON.parse(historyJson) as string[];
-              
-              if (history.length <= 1) {
-                alert('이전 검사 결과가 없습니다.');
-                return;
-              }
-              
-              const currentResultId = resultData?.resultId;
-              const otherResults = history.filter(id => id !== currentResultId);
-              
-              if (otherResults.length === 0) {
-                alert('이전 검사 결과가 없습니다.');
-                return;
-              }
-              
-              const selectedResult = window.confirm(
-                '이전 검사 결과를 조회하시겠습니까?\n' +
-                '(지금은 간단한 메시지로 구현되어 있습니다. 추후 더 좋은 UI로 개선될 예정입니다.)'
-              );
-              
-              if (selectedResult) {
-                alert('기능 준비중입니다. 향후 업데이트에서 제공될 예정입니다.');
-              }
-            }}
+        {/* 이전 검사 결과 조회 버튼 */}
+        <div className="self-stretch px-5 pb-4">
+          <Link 
+            href="/survey/history"
             className="w-full px-4 py-3 bg-white border border-sky-100 rounded-2xl flex justify-center items-center gap-2 text-sky-500"
           >
             <div className="text-center justify-center text-sky-500 text-sm font-semibold font-['Pretendard_Variable'] leading-6">
               이전 검사 결과 보기
             </div>
-          </button>
-        </div> */}
+          </Link>
+        </div>
         
         {/* 후원하기 버튼 */}
         <div className="self-stretch px-5 pb-6">

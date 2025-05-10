@@ -165,7 +165,8 @@ export async function POST(request: NextRequest) {
       resultId,
       categoryResults, 
       globalResult, 
-      baiResult
+      baiResult,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
     });
     
   } catch (error) {
