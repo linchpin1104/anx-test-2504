@@ -216,14 +216,11 @@ export default function RegisterPage() {
         <div className="self-stretch text-center justify-end text-neutral-800 text-xl font-bold leading-7">
           더나일의 양육불안 검사를<br/>소개합니다
         </div>
-        <div className="self-stretch text-center text-neutral-600 text-[15px] leading-6 mt-3">
+        <div className="self-stretch text-center text-neutral-600 text-[15px] leading-6 mt-3 flex flex-col">
           <span className="font-bold">본 검사는 사단법인 더나일에서 양육불안 해소를 위해 배포하는 무료 검사로, 자녀 양육시 느끼는 정서, 능력, 관계에 대한 양육불안과 우울감을 통합적으로 측정합니다.</span>
-          <br /><br />
-          낮은 양육불안은 양육에 대한 건강한 자신감과, 자녀와의 관계 및 정서에 대한 안정감이 있음을 의미합니다.
-          <br /><br />
-          검사 후 더나일에서 필요한 지원을 받으시거나 페이서로 후원하여 다른 가족의 어려움을 도울수 있습니다.
-          <br /><br />
-          <span className="font-bold">더나일은 가족의 행복에 집중합니다.</span>
+          <span className="mt-4">낮은 양육불안은 양육에 대한 건강한 자신감과, 자녀와의 관계 및 정서에 대한 안정감이 있음을 의미합니다.</span>
+          <span className="mt-4">검사 후 더나일에서 필요한 지원을 받으시거나 페이서로 후원하여 다른 가족의 어려움을 도울수 있습니다.</span>
+          <span className="mt-4 font-bold">더나일은 가족의 행복에 집중합니다.</span>
         </div>
       </div>
       
