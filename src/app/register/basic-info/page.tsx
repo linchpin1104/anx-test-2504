@@ -42,6 +42,25 @@ export default function BasicInfoPage() {
         router.replace('/register');
         return;
       }
+
+      // 이미 저장된 기본 정보가 있으면 폼에 채워넣기
+      const childAge = safeGetItem('childAge');
+      const childGender = safeGetItem('childGender');
+      const parentAgeGroup = safeGetItem('parentAgeGroup');
+      const caregiverType = safeGetItem('caregiverType');
+      const region = safeGetItem('region');
+
+      console.log('기존 사용자 정보 로드:', {
+        childAge, childGender, parentAgeGroup, caregiverType, region
+      });
+
+      // 기존 값이 있으면 폼에 설정
+      if (childAge) setValue('childAge', childAge);
+      if (childGender) setValue('childGender', childGender);
+      if (parentAgeGroup) setValue('parentAgeGroup', parentAgeGroup);
+      if (caregiverType) setValue('caregiverType', caregiverType);
+      if (region) setValue('region', region);
+      
     } catch (err) {
       const appError = handleError(err);
       setError({

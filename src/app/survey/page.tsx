@@ -87,6 +87,25 @@ export default function SurveyPage() {
         setUserInfo(savedUserInfo);
         console.log('사용자 정보 로드됨:', savedUserInfo);
         
+        // 추가: 사용자 정보가 완전한지 확인
+        // region, childAge, childGender, parentAgeGroup, caregiverType 중 하나라도 없으면 정보 미완성
+        const requiredBasicInfo = ['childAge', 'childGender', 'parentAgeGroup', 'caregiverType', 'region'];
+        const hasIncompleteInfo = requiredBasicInfo.some(field => !safeGetItem(field));
+        
+        if (hasIncompleteInfo) {
+          console.log('사용자 정보 불완전, 기본 정보 입력 페이지로 리디렉션', {
+            childAge: safeGetItem('childAge'),
+            childGender: safeGetItem('childGender'),
+            parentAgeGroup: safeGetItem('parentAgeGroup'),
+            caregiverType: safeGetItem('caregiverType'),
+            region: safeGetItem('region')
+          });
+          
+          // 기본 정보가 불완전한 경우 기본 정보 입력 페이지로 리디렉션
+          router.replace('/register/basic-info');
+          return;
+        }
+        
         // 테스트를 위해 임시 결과 이력 생성 (01052995980용)
         if (savedUserInfo.phone && savedUserInfo.phone.includes('01052995980')) {
           console.log('테스트 사용자(01052995980) 감지! 테스트 이력 데이터 생성');

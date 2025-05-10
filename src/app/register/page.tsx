@@ -36,8 +36,8 @@ export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormValues>({
     defaultValues: {
       countryCode: '+82', // 기본값으로 한국 국가코드 설정
-      privacyAgreed: false,
-      marketingAgreed: false
+      privacyAgreed: true, // 개인정보 활용 동의 기본값을 true로 변경
+      marketingAgreed: true // 마케팅 수신 동의 기본값을 true로 변경
     }
   });
   const router = useRouter();
@@ -178,9 +178,52 @@ export default function RegisterPage() {
           };
           localStorage.setItem('userInfo', JSON.stringify(userInfo));
           
-          // 이미 검사 결과가 있는지 확인
           try {
-            console.log('기존 검사 결과 확인 시작:', fullPhoneNumber);
+            console.log('기존 사용자 정보 확인 시작:', fullPhoneNumber);
+            
+            // 프로덕션 환경이든 개발 환경이든 사용자 정보 완전성 확인
+            const userProfileRes = await fetch(`/api/member/check?userId=${encodeURIComponent(fullPhoneNumber)}`);
+            
+            // 사용자 정보 응답
+            if (userProfileRes.ok) {
+              const profileData = await userProfileRes.json();
+              console.log('사용자 정보 응답:', profileData);
+              
+              if (profileData.success && profileData.userData) {
+                // 사용자 데이터가 있고 완전한 경우 (필수 필드가 모두 있음)
+                const userData = profileData.userData;
+                
+                // 필요한 필드가 모두 있는지 확인
+                const requiredFields = ['childAge', 'childGender', 'parentAgeGroup', 'caregiverType', 'region'];
+                const isProfileComplete = requiredFields.every(field => userData[field]);
+                
+                if (isProfileComplete) {
+                  console.log('완전한 사용자 정보 감지, 로컬 스토리지에 저장');
+                  
+                  // 로컬 스토리지에 사용자 정보 저장
+                  localStorage.setItem('childAge', userData.childAge);
+                  localStorage.setItem('childGender', userData.childGender);
+                  localStorage.setItem('parentAgeGroup', userData.parentAgeGroup);
+                  localStorage.setItem('caregiverType', userData.caregiverType);
+                  localStorage.setItem('region', userData.region || '');
+                } else {
+                  console.log('불완전한 사용자 정보, 기본정보 입력 페이지로 이동');
+                  router.push('/register/basic-info');
+                  return;
+                }
+              } else {
+                // 사용자 정보가 없거나 불완전한 경우, 기본정보 페이지로 이동
+                console.log('사용자 정보 없음, 기본정보 입력 페이지로 이동');
+                router.push('/register/basic-info');
+                return;
+              }
+            } else {
+              // API 오류 발생시 로컬 데이터 확인
+              console.log('사용자 정보 API 오류, 로컬 스토리지 확인으로 대체');
+            }
+            
+            // 이미 검사 결과가 있는지 확인
+            console.log('검사 이력 확인 시작');
             // 개발 환경에서 로컬 스토리지에서 이력 가져오기
             if (process.env.NODE_ENV === 'development') {
               const historyJson = localStorage.getItem('surveyResultHistory') || '[]';
@@ -338,6 +381,7 @@ export default function RegisterPage() {
                   id="privacyAgreed"
                   {...register('privacyAgreed', { required: true })}
                   className="h-4 w-4 text-sky-500 focus:ring-sky-400 border-gray-300 rounded"
+                  defaultChecked
                 />
                 <label htmlFor="privacyAgreed" className="ml-2 text-sm font-medium text-gray-900 flex items-center">
                   <span>개인정보 수집 및 활용에 동의합니다</span>
@@ -355,6 +399,7 @@ export default function RegisterPage() {
                   id="marketingAgreed"
                   {...register('marketingAgreed')}
                   className="h-4 w-4 text-sky-500 focus:ring-sky-400 border-gray-300 rounded"
+                  defaultChecked
                 />
                 <label htmlFor="marketingAgreed" className="ml-2 text-sm font-medium text-gray-900">
                   마케팅 정보 수신에 동의합니다 (선택)
@@ -364,6 +409,7 @@ export default function RegisterPage() {
               <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-100 rounded">
                 수집된 개인정보는 서비스 제공 및 개선, 새로운 서비스 안내, 이벤트 정보 제공 등을 위해 활용됩니다. 
                 개인정보는 회원 탈퇴 시 즉시 파기됩니다.
+                <p className="mt-1 text-sky-600 font-medium">※ 원활한 서비스 제공을 위해 동의는 기본 설정되어 있습니다.</p>
               </div>
             </div>
           </div>
