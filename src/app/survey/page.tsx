@@ -76,6 +76,8 @@ export default function SurveyPage() {
     
     // 로컬 스토리지에서 사용자 정보 확인
     const userInfoStr = localStorage.getItem('userInfo');
+    console.log('로컬 스토리지 userInfo:', userInfoStr);
+    
     if (userInfoStr) {
       try {
         const savedUserInfo = JSON.parse(userInfoStr);
@@ -90,6 +92,7 @@ export default function SurveyPage() {
           const testResultId = 'test-result-id-' + Date.now();
           const testHistory = [testResultId];
           localStorage.setItem('surveyResultHistory', JSON.stringify(testHistory));
+          console.log('테스트 이력 저장됨:', testHistory);
           
           // 테스트 결과 목록 설정
           const mockHistory: HistoryResult[] = [{
@@ -103,8 +106,12 @@ export default function SurveyPage() {
           
           setHistoryResults(mockHistory);
           
-          // 모달 표시 강제 설정
-          setShowSelectionModal(true);
+          // 강제로 약간 지연시킨 후 모달 표시
+          setTimeout(() => {
+            setShowSelectionModal(true);
+            console.log('테스트 이력 데이터 생성 및 모달 표시 설정됨 (타임아웃 후)');
+          }, 500);
+          
           console.log('테스트 이력 데이터 생성 및 모달 표시 설정됨');
         }
         // 일반적인 사용자의 경우 이력 로드
@@ -114,6 +121,8 @@ export default function SurveyPage() {
       } catch (e) {
         console.error('사용자 정보 파싱 오류:', e);
       }
+    } else {
+      console.log('사용자 정보가 없음, 로그인 페이지로 리디렉션 필요');
     }
     
     // 질문 데이터 불러오기

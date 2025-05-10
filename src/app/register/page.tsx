@@ -184,10 +184,10 @@ export default function RegisterPage() {
           
           // 이미 검사 결과가 있는지 확인
           try {
-            console.log('기존 검사 결과 확인 중...');
-            // 개발 환경에서는 localStorage로 확인
+            console.log('기존 검사 결과 확인 시작:', fullPhoneNumber);
+            // 개발 환경에서 로컬 스토리지에서 이력 가져오기
             if (process.env.NODE_ENV === 'development') {
-              const historyJson = localStorage.getItem('surveyResultHistory');
+              const historyJson = localStorage.getItem('surveyResultHistory') || '[]';
               console.log('로컬 이력 데이터:', historyJson);
               
               if (historyJson && JSON.parse(historyJson).length > 0) {
@@ -195,16 +195,23 @@ export default function RegisterPage() {
                 // 기존 결과가 있으면 설문조사 페이지로 바로 이동
                 router.push('/survey');
                 return;
+              } else {
+                console.log('검사 이력 없음, 기본 정보 입력 페이지로 이동 예정');
               }
             } else {
               // 프로덕션에서는 API 호출로 확인
+              console.log('프로덕션 환경 - API로 검사 이력 확인 시도');
               const checkHistoryRes = await fetch(`/api/result/user-history?userId=${encodeURIComponent(fullPhoneNumber)}`);
               const historyData = await checkHistoryRes.json();
+              console.log('API 이력 응답:', historyData);
               
               if (historyData.success && historyData.results && historyData.results.length > 0) {
+                console.log('API에서 검사 이력 확인됨, 설문조사 페이지로 이동');
                 // 기존 결과가 있으면 설문조사 페이지로 바로 이동
                 router.push('/survey');
                 return;
+              } else {
+                console.log('API에서 검사 이력 없음, 기본 정보 입력 페이지로 이동 예정');
               }
             }
           } catch (historyError) {
