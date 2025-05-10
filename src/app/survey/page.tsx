@@ -342,6 +342,9 @@ export default function SurveyPage() {
         childGender: safeGetItem('childGender'),
         parentAgeGroup: safeGetItem('parentAgeGroup'),
         caregiverType: safeGetItem('caregiverType'),
+        marketingAgreed: localStorage.getItem('userInfo') ? 
+          JSON.parse(localStorage.getItem('userInfo') || '{}').marketingAgreed || false : 
+          false,
       };
       
       // 필수 사용자 정보 확인

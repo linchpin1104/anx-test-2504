@@ -83,8 +83,41 @@ export default function BasicInfoPage() {
       
       console.log('로컬 스토리지에 정보 저장 완료');
       
-      // 서버 통신을 시뮬레이션(실제로는 서버에 정보를 저장하는 API 호출을 할 수 있음)
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 사용자 기본 정보 가져오기
+      const name = safeGetItem('registerName');
+      const phone = safeGetItem('registerPhone');
+      
+      // 마케팅 수신 동의 정보 가져오기
+      let marketingAgreed = false;
+      try {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          const userInfo = JSON.parse(userInfoStr);
+          marketingAgreed = userInfo.marketingAgreed || false;
+        }
+      } catch (e) {
+        console.error('마케팅 수신 동의 정보 가져오기 실패:', e);
+      }
+      
+      // API로 서버에 데이터 저장
+      const res = await fetch('/api/member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          phone,
+          childAge: data.childAge,
+          childGender: data.childGender,
+          parentAgeGroup: data.parentAgeGroup,
+          caregiverType: data.caregiverType,
+          marketingAgreed
+        })
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || '서버 오류가 발생했습니다.');
+      }
       
       // 페이지 이동
       console.log('다음 페이지로 이동 시작');

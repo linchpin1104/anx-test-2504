@@ -4,7 +4,7 @@ import * as admin from 'firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, phone, childAge, childGender, parentAgeGroup, caregiverType } = await request.json();
+    const { name, phone, childAge, childGender, parentAgeGroup, caregiverType, marketingAgreed } = await request.json();
     
     // Validate required fields
     if (!name || !phone || !childAge || !childGender || !parentAgeGroup || !caregiverType) {
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
           childGender,
           parentAgeGroup,
           caregiverType,
+          marketingAgreed: marketingAgreed || false, // Default to false if not provided
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       } catch (firestoreError) {
