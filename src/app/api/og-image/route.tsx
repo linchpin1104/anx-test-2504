@@ -2,8 +2,8 @@ import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
 // Firebase Admin SDK는 제거합니다
 
-// Set the proper runtime for OG image generation
-export const runtime = 'nodejs';
+// Edge 런타임 사용 - OG 이미지 생성에 권장됨
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
