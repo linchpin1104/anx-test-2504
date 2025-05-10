@@ -51,10 +51,6 @@ export default function RegisterPage() {
   // 현재 선택된 국가코드 감시
   const selectedCountryCode = watch('countryCode');
 
-  // 현재 체크박스 값 감시
-  const privacyAgreed = watch('privacyAgreed');
-  const marketingAgreed = watch('marketingAgreed');
-
   const onSendCode = async (data: FormValues) => {
     setSending(true);
     setSendError('');
